@@ -37,7 +37,7 @@ int main(){ //Attempt to optimize or find pattern in the placement of the first 
 		- 4 no queens
 		- 5 no queens
 		- 6 ??
-
+	*/
 
 
 	return 0;
