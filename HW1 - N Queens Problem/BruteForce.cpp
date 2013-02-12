@@ -124,23 +124,32 @@ int main(int argc, char *argv[]){
 				}
 
 				if(board[yPos][xPos] == 99){
-					board[yPos][xPos] = 60 + numQueens;
+					board[yPos][xPos] = 66;
 					queenPositions[0][numQueens] = xPos;
 					queenPositions[1][numQueens] = yPos;				
 					posFound = true;
 				}
 				else {
 					if((yPos == (n-1)) && (xPos == (n-1))){		
-						if(numQueens == (n-1)){
+						if(numQueens == n){
 							solutionsRemaining = false;							
 							break;
 						}
 						else {
-							
+							for(int i = 0; i < n; i++){
+								for(int j = 0; j < n; j++){
+									if((board[i][j] == 66) || (board[i][j] == numQueens)){
+										board[i][j] = 99;
+									}
+								}
+							}
+							queenPositions[0][numQueens] = -1;
+							queenPositions[1][numQueens] = -1;
+							numQueens--;	
 						}
 					}
 				}
-				cout << yPos << xPos << endl;
+				//cout << yPos << xPos << endl;
 			}
 
 			// Make spaces taken by horizontal or vertical moves unavailable
@@ -203,7 +212,7 @@ int main(int argc, char *argv[]){
 			knightMoves(yShift, xShift, board, numQueens, n);
 
 			numQueens++;
-			printArray(board, n);
+			//printArray(board, n);
 		}
 	}
 	return 0;
