@@ -1,7 +1,50 @@
 #include <iostream>
 #include <iomanip>
+#include <vector>
 
 using namespace std;
+
+void columnsAndRows(int y, int x, int **b, int nQ, int N){ 
+	for(int i = 0; i < N; i++){
+		if(b[y][i] == 99){
+			b[y][i] = nQ;
+		}
+		if(b[i][x] == 99){
+			b[i][x] = nQ;
+		}
+	}
+}
+
+void diagonalMoves(int y, int x, int **b, int nQ, int N, int yChange, int xChange){ 
+	while((y >= 0) && (x >= 0) && (y < N) && (x < N)){
+		if(b[y][x] == 99){
+			b[y][x] = nQ;
+		}
+		y += yChange;
+		x += xChange;
+	}		
+}
+
+void knightMoves(int y, int x, int **b, int nQ, int N){
+	if((y >= 0) && (y < N)){
+		if((x >= 0) && (x < N)){
+			if(b[y][x] == 99){
+				b[y][x] = nQ;	
+			}
+		}
+	}
+}
+
+void printArray(int **b, int N){
+	for(int i = 0; i < N; i++){
+		for(int j = 0; j < N; j++){
+			cout << setw(3) << b[i][j];
+		}
+		cout << endl;
+	}
+	cout << endl;
+	cout << endl;
+}
 
 int main(){ //Attempt to optimize or find pattern in the placement of the first queen
 
@@ -18,6 +61,8 @@ int main(){ //Attempt to optimize or find pattern in the placement of the first 
 
 		int** board = new int*[n];
 		int** queenPositions = new int*[n];
+		int* newSolution = new int[n];
+		vector<int*> solutions;
 
 		for(int i = 0; i < n; i++){
 			board[i] = new int[n];
@@ -34,11 +79,9 @@ int main(){ //Attempt to optimize or find pattern in the placement of the first 
 		while(solutionsRemaining){
 			posFound = false;
 			while(!posFound){
-				cout << "after while posfound  " << xPos << yPos << endl;
 				if(yPos < (n-1)){
 					if(xPos < (n-1)){
 						xPos++;
-						cout << "in xpos < n" << endl;
 					}
 					else {
 						xPos = 0;
@@ -46,95 +89,82 @@ int main(){ //Attempt to optimize or find pattern in the placement of the first 
 					}
 				}
 				else {
-					posFound = true;
-					solutionsRemaining = false;
-					cout << "solutionsRemaining " << solutionsRemaining << endl;
-					cout << "X" << xPos << "     Y" << yPos << endl;
-					break;
+					if(xPos < (n-1)){
+						xPos++;
+					}
 				}
+
 				if(board[yPos][xPos] == 99){
-					board[yPos][xPos] = 69;
+					board[yPos][xPos] = 60 + numQueens;
 					posFound = true;
 				}
+				else {
+					if((yPos == n) && (xPos == n)){
+						solutionsRemaining = false;
+						break;
+					}
+				}
 			}
-			cout << "X" << xPos << "     Y" << yPos << endl;	
+
 			//cout << "Removing columns and rows" << endl;
-			for(int i = 0; i < n; i++){ //take out columns and rows
-				if(board[yPos][i] == 99){
-					board[yPos][i] = numQueens;
-				}
-				if(board[i][xPos] == 99){
-					board[i][xPos] = numQueens;
-				}
-			}
+			columnsAndRows(yPos, xPos, board, numQueens, n); 
 			
 			yShift = yPos - 1;
 			xShift = xPos - 1;
 			//cout << "Moving to upper left" << endl;
-			while((yShift >= 0) && (xShift >= 0)){ //move to upper left
-				if(board[yShift][xShift] == 99){
-					board[yShift][xShift] = numQueens;
-				}
-				yShift--;
-				xShift--;
-			}
+			diagonalMoves(yShift, xShift, board, numQueens, n, -1, -1);
 			
 			yShift = yPos + 1;
 			xShift = xPos + 1;
 			//cout << "Moving to lower right" << endl;
-			while((yShift < n) && (xShift < n)){ //move to lower right 
-				if(board[yShift][xShift] == 99){
-					board[yShift][xShift] = numQueens;
-				}
-				//cout << yShift << xShift << endl;
-				yShift++;
-				xShift++;				
-			}
+			diagonalMoves(yShift, xShift, board, numQueens, n, 1, 1);
 			
 			yShift = yPos + 1;
 			xShift = xPos - 1;
 			//cout << "Moving to lower left" << endl;
-			while((yShift < n) && (xShift >= 0)){ //move to lower left 
-				if(board[yShift][xShift] == 99){
-					board[yShift][xShift] = numQueens;
-				}
-				yShift++;
-				xShift--;				
-			}
+			diagonalMoves(yShift, xShift, board, numQueens, n, 1, -1);
 			
 			yShift = yPos - 1;
 			xShift = xPos + 1;
 			//cout << "Moving to upper right" << endl;
-			while((yShift >= 0) && (xShift < n)){ //move to upper right
-				if(board[yShift][xShift] == 99){
-					board[yShift][xShift] = numQueens;	
-				}
-				yShift--;
-				xShift++;			
-			}
+			diagonalMoves(yShift, xShift, board, numQueens, n, -1, 1);
+
+			//cout << "Finding knight moves" << endl;
+			yShift = yPos - 2;
+			xShift = xPos - 1;
+			knightMoves(yShift, xShift, board, numQueens, n);
+
+			yShift = yPos - 2;
+			xShift = xPos + 1;
+			knightMoves(yShift, xShift, board, numQueens, n);
 			
-			numQueens++;
-			for(int i = 0; i < n; i++){
-				for(int j = 0; j < n; j++){
-					cout << setw(3) << board[i][j];
-				}
-				cout << endl;
-			}	
+			yShift = yPos - 1;
+			xShift = xPos + 2;
+			knightMoves(yShift, xShift, board, numQueens, n);
 		
-			
+			yShift = yPos + 1;
+			xShift = xPos + 2;
+			knightMoves(yShift, xShift, board, numQueens, n);
+
+			yShift = yPos + 2;
+			xShift = xPos + 1;
+			knightMoves(yShift, xShift, board, numQueens, n);
+
+			yShift = yPos + 2;
+			xShift = xPos - 1;
+			knightMoves(yShift, xShift, board, numQueens, n);
+
+			yShift = yPos - 1;
+			xShift = xPos - 2;
+			knightMoves(yShift, xShift, board, numQueens, n);
+
+			yShift = yPos + 1;
+			xShift = xPos - 2;
+			knightMoves(yShift, xShift, board, numQueens, n);
+
+			numQueens++;
+			printArray(board, n);
 		}
 	}
-
-	/*Cases
-	- 0 no queens
-	- 1 1 queen
-	- 2 no queens
-	- 3 no queens
-	- 4 no queens
-	- 5 no queens
-	- 6 ??
-	*/
-
-
 	return 0;
 }
