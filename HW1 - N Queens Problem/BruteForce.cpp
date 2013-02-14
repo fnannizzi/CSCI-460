@@ -13,18 +13,21 @@ using namespace std;
 void columnsAndRows(int y, int x, int **b, int nQ, int N){ 
 	for(int i = 0; i < N; i++){
 		if(b[y][i] == 99){
+			cout << "Removing rows " << i << endl;
 			b[y][i] = nQ;
 		}
 		if(b[i][x] == 99){
+			cout << "Removing columns " << i << endl;
 			b[i][x] = nQ;
 		}
 	}
 }
 
 // Mark the diagonal spaces as unavailable
-void diagonalMoves(int y, int x, int **b, int nQ, int N, int yChange, int xChange){ 
+void checkDiagonalMoves(int y, int x, int **b, int nQ, int N, int yChange, int xChange){ 
 	while((y >= 0) && (x >= 0) && (y < N) && (x < N)){
 		if(b[y][x] == 99){
+			cout << "Removing diagonals " << x << y << endl;
 			b[y][x] = nQ;
 		}
 		y += yChange;
@@ -32,15 +35,76 @@ void diagonalMoves(int y, int x, int **b, int nQ, int N, int yChange, int xChang
 	}		
 }
 
+void diagonalMoves(int y, int x, int **b, int nQ, int N){
+	int yShift, xShift;
+	
+	yShift = y - 1;
+	xShift = x - 1;
+	//cout << "Moving to upper left" << endl;
+	checkDiagonalMoves(yShift, xShift, b, nQ, N, -1, -1);
+			
+	yShift = y + 1;
+	xShift = x + 1;
+	//cout << "Moving to lower right" << endl;
+	checkDiagonalMoves(yShift, xShift, b, nQ, N, 1, 1);
+			
+	yShift = y + 1;
+	xShift = x - 1;
+	//cout << "Moving to lower left" << endl;
+	checkDiagonalMoves(yShift, xShift, b, nQ, N, 1, -1);
+			
+	yShift = y - 1;
+	xShift = x + 1;
+	//cout << "Moving to upper right" << endl;
+	checkDiagonalMoves(yShift, xShift, b, nQ, N, -1, 1);
+}
+
 // Mark any spaces taken by knight moves as unavailable
-void knightMoves(int y, int x, int **b, int nQ, int N){
+void checkKnightMoves(int y, int x, int **b, int nQ, int N){
 	if((y >= 0) && (y < N)){
 		if((x >= 0) && (x < N)){
 			if(b[y][x] == 99){
+				cout << "Removing knights " << x << y << endl;
 				b[y][x] = nQ;	
 			}
 		}
 	}
+}
+
+void knightMoves(int y, int x, int **b, int nQ, int N){
+	int yShift, xShift;
+	
+	yShift = y - 2;
+	xShift = x - 1;
+	checkKnightMoves(yShift, xShift, b, nQ, N);
+
+	yShift = y - 2;
+	xShift = x + 1;
+	checkKnightMoves(yShift, xShift, b, nQ, N);
+			
+	yShift = y - 1;
+	xShift = x + 2;
+	checkKnightMoves(yShift, xShift, b, nQ, N);
+		
+	yShift = y + 1;
+	xShift = x + 2;
+	checkKnightMoves(yShift, xShift, b, nQ, N);
+
+	yShift = y + 2;
+	xShift = x + 1;
+	checkKnightMoves(yShift, xShift, b, nQ, N);
+
+	yShift = y + 2;
+	xShift = x - 1;
+	checkKnightMoves(yShift, xShift, b, nQ, N);
+
+	yShift = y - 1;
+	xShift = x - 2;
+	checkKnightMoves(yShift, xShift, b, nQ, N);
+
+	yShift = y + 1;
+	xShift = x - 2;
+	checkKnightMoves(yShift, xShift, b, nQ, N);
 }
 
 // Print the board (for testing)
@@ -69,9 +133,9 @@ int main(int argc, char *argv[]){
 	// Variable Declarations
 	int n, numSolutions = 0, numQueens = 0;
 	int yPos = 0, xPos = -1;
-	int yShift = 0, xShift = 0;
 	bool solutionsRemaining = true, posFound = false;
 	int numSolutionsRecorded = 0;
+	int count = 0;
 
 	// Handling command line arguments
 	if(argc == 0){ // if user forgets to specify n, ask them
@@ -86,14 +150,18 @@ int main(int argc, char *argv[]){
 
 	if((n >= 0) && (n < 15)){ // check to see if n is valid
 
-		// Declare arrays and vectors
-		int** board = new int*[n];
-		int** queenPositions = new int*[n];
+		// Initialize solutions vector
 		vector<int**> solutions;
 
-		// Initialize 2D arrays
+		// Initialize 2D board array
+		int** board = new int*[n];
 		for(int i = 0; i < n; i++){
 			board[i] = new int[n];
+		}
+
+		// Initialize 2D solution array
+		int** queenPositions = new int*[n];
+		for(int i = 0; i < n; i++){
 			queenPositions[i] = new int[2];
 		}
 		
@@ -124,7 +192,7 @@ int main(int argc, char *argv[]){
 				}
 
 				if(board[yPos][xPos] == 99){
-					board[yPos][xPos] = 66;
+					board[yPos][xPos] = (40 + numQueens);
 					queenPositions[0][numQueens] = xPos;
 					queenPositions[1][numQueens] = yPos;				
 					posFound = true;
@@ -138,81 +206,35 @@ int main(int argc, char *argv[]){
 						else {
 							for(int i = 0; i < n; i++){
 								for(int j = 0; j < n; j++){
-									if((board[i][j] == 66) || (board[i][j] == numQueens)){
+									if((board[i][j] == (40 + numQueens)) || (board[i][j] == numQueens)){
 										board[i][j] = 99;
 									}
 								}
 							}
+							posFound = true;
 							queenPositions[0][numQueens] = -1;
 							queenPositions[1][numQueens] = -1;
 							numQueens--;	
 						}
 					}
 				}
-				//cout << yPos << xPos << endl;
 			}
 
 			// Make spaces taken by horizontal or vertical moves unavailable
-			//cout << "Removing columns and rows" << endl;
 			columnsAndRows(yPos, xPos, board, numQueens, n); 
 			
 			// Make spaces taken by diagonal moves unavailable
-			yShift = yPos - 1;
-			xShift = xPos - 1;
-			//cout << "Moving to upper left" << endl;
-			diagonalMoves(yShift, xShift, board, numQueens, n, -1, -1);
-			
-			yShift = yPos + 1;
-			xShift = xPos + 1;
-			//cout << "Moving to lower right" << endl;
-			diagonalMoves(yShift, xShift, board, numQueens, n, 1, 1);
-			
-			yShift = yPos + 1;
-			xShift = xPos - 1;
-			//cout << "Moving to lower left" << endl;
-			diagonalMoves(yShift, xShift, board, numQueens, n, 1, -1);
-			
-			yShift = yPos - 1;
-			xShift = xPos + 1;
-			//cout << "Moving to upper right" << endl;
-			diagonalMoves(yShift, xShift, board, numQueens, n, -1, 1);
+			diagonalMoves(yPos, xPos, board, numQueens, n);
 
 			// Make spaces taken by knight moves unavailable			
-			//cout << "Finding knight moves" << endl;
-			yShift = yPos - 2;
-			xShift = xPos - 1;
-			knightMoves(yShift, xShift, board, numQueens, n);
-
-			yShift = yPos - 2;
-			xShift = xPos + 1;
-			knightMoves(yShift, xShift, board, numQueens, n);
-			
-			yShift = yPos - 1;
-			xShift = xPos + 2;
-			knightMoves(yShift, xShift, board, numQueens, n);
-		
-			yShift = yPos + 1;
-			xShift = xPos + 2;
-			knightMoves(yShift, xShift, board, numQueens, n);
-
-			yShift = yPos + 2;
-			xShift = xPos + 1;
-			knightMoves(yShift, xShift, board, numQueens, n);
-
-			yShift = yPos + 2;
-			xShift = xPos - 1;
-			knightMoves(yShift, xShift, board, numQueens, n);
-
-			yShift = yPos - 1;
-			xShift = xPos - 2;
-			knightMoves(yShift, xShift, board, numQueens, n);
-
-			yShift = yPos + 1;
-			xShift = xPos - 2;
-			knightMoves(yShift, xShift, board, numQueens, n);
+			knightMoves(yPos, xPos, board, numQueens, n);
 
 			numQueens++;
-			//printArray(board, n);
+			count++;
+			printArray(board, n);
+			if(count == 11){
+				break;
+			}	
 		}
 	}
 	return 0;
