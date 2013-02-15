@@ -58,42 +58,29 @@ int main(int argc, char *argv[]){
 		
 		// Solution algorithm
 		while(solutionsRemaining){ // runs as long as not every solution has been found
-			while(!positionFound){ // runs while a position hasn't been found for the next queen
-				updatePosition(yPos, xPos, n); // needs to check against "bad positions"
-				if(board[yPos][xPos] == 99){ // position found
-					// update queen positions
-					// edit board
-					// set positionFound
-					// remove columns and rows, diagonals, knights
-					// increment numqueens
-					// break out of position found loop					
-				} // end if
-				else { // position not found
-					if((yPos == (n-1)) && (xPos == (n-1))){		
-						if(numQueens == n){
-							// new solution found
-							// store solution
-						}
-						else {
-							// not a solution
-							// add position of last queen to "bad positions"
-							// need to look at status of backtrace
-							// want to remove last placed queen and clear blocked out spaces
-							// if there are no remaining locations to check, clear "bad positions"
-							// add position of last placed queen to "bad positions"
-							// remove last last placed queen, and begin again
-						}
+			updatePosition(yPos, xPos, n); // needs to check against "tried positions"
+			if(board[yPos][xPos] == 99){ // position found
+				// update queen positions
+				// edit board
+				// remove columns and rows, diagonals, knights
+				// increment numqueens					
+			} // end if
+			else { // position not found
+				if((yPos == (n-1)) && (xPos == (n-1))){		
+					if(numQueens == n){
+						// new solution found
+						// store solution
 					}
+					else {
+						// if function checkRemainingPositions turns up nothing, clear "tried positions"
+					}
+					// add position of last queen to "tried positions"
+					// remove last placed queen and clear blocked out spaces
+					// decrement numQueens
+					// if numQueens = 0 and you are at the last position, break
 				}
-			} // end while !positionFound	
+			}	
 		} // end while solutionsRemaining
-		if((yStart == (n-1)) && (xStart == (n-1))){
-			solutionsRemaining = false;
-		}
-		else {
-			updatePosition(yStart, xStart, n);
-			solutionsFound = false;
-		}
 	} // end if n
 	return 0;
 }
