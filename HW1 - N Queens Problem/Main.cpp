@@ -266,7 +266,6 @@ int main(int argc, char *argv[]){
 		// Solution algorithm
 		while(solutionsRemaining){ // runs until every possibility has been searched
 			positionFound = updatePosition(yPos, xPos, n, board, triedPositions);
-			cout << "positionFound " << positionFound << endl;
 			if(positionFound){ // position available
 				board[yPos][xPos] = (40 + numQueens);
 				queenPositions[numQueens].y = yPos;
@@ -284,7 +283,6 @@ int main(int argc, char *argv[]){
 				cout << "numQueens " << numQueens << endl;
 			}
 			else {
-				cout << "Position not found" << endl;
 				if((yPos == (n-1)) && (xPos == (n-1))){	// have checked last location	
 					if(numQueens == n){ // if there are n queens on the board
 						cout << "SOLUTION FOUND!" << endl;
@@ -293,14 +291,18 @@ int main(int argc, char *argv[]){
 						printSolution(queenPositions);							
 					}
 					else { // not a solution, time to backtrack
-						positionFound = checkRemainingPositions(board, n, triedPositions);	
+						positionFound = checkRemainingPositions(board, n, triedPositions);
+						cout << "Backtracking? " << positionFound << endl;	
 						if(!positionFound){ // no untried positions
+							printSolution(triedPositions);
 							triedPositions.clear();
 						}
 					}
+					numQueens--;
 					coordinate c;
 					c.x = queenPositions[numQueens].x;
 					c.y = queenPositions[numQueens].y;
+					printSolution(queenPositions);
 					cout << "Failed: " << c.x << " " << c.y << endl;					
 					triedPositions.push_back(c);
 					board[c.y][c.x] = 99;
@@ -311,7 +313,6 @@ int main(int argc, char *argv[]){
 							}
 						}
 					}
-					numQueens--;
 					if(numQueens == 0){
 						if((c.x == (n-1)) && (c.y == (n-1))){
 							solutionsRemaining = false;
