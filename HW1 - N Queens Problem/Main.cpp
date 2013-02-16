@@ -15,34 +15,34 @@ struct coordinate {
 	int x, y;
 }; 
 
-// Increment y or x position marker
-bool updatePosition(int &y, int &x, int N, int** b, vector<coordinate> &tP){
-	bool check = true;
-	if(y < (N-1)){
-		if(x < (N-1)){
-			x++;
-		}
-		else {
-			x = 0;
-			y++;
-		}
-	}
-	else {
-		if(x < (N-1)){
-			x++;
-		}
-	}
+// Find a new, unblocked position
+void incrementPosition(int &y, int &x, int N, int** b){
+	int last = x;
+	x = -2; 
 	
-	if(b[y][x] != 99){
-		check = false;
-	}
-	
-	for(int i = 0; i < tP.size(); i++){
-		if((tP[i].x == x) && (tP[i].y == y)){
-			check = false;
+	for(int i = last; i < N; i++){
+		if(b[y][i] == 99){
+			x = i;
 			break;
 		}
 	}
+}
+
+// Verify new position
+bool updatePosition(int &y, int &x, int N, int** b){
+	bool check = true;
+	int xTemp = x + 1;
+	
+	incrementPosition(y, xTemp, N, b);
+	
+	if(xTemp > x){
+		x = xTemp;
+	}	
+	else {
+		check = false;
+	}
+	
+	cout << "From updatePosition: " << x << " " << y << endl;
 	return check;
 }
 
@@ -216,7 +216,8 @@ int main(int argc, char *argv[]){
 
 	// Variable Declarations
 	int n, numSolutions = 0, numQueens = 0;
-	int yPos = 0, xPos = -1;
+	int row = 0, column = -1;
+	int columnStart = 0;
 	bool solutionsRemaining = true, positionFound = false;
 	int numSolutionsRecorded = 0;
 	int count = 0;
@@ -264,48 +265,86 @@ int main(int argc, char *argv[]){
 		vector<coordinate> triedPositions;
 		
 		// Solution algorithm
-		while(solutionsRemaining){ // runs until every possibility has been searched
-			positionFound = updatePosition(yPos, xPos, n, board, triedPositions);
-			if(positionFound){ // position available
-				board[yPos][xPos] = (40 + numQueens);
-				queenPositions[numQueens].y = yPos;
-				queenPositions[numQueens].x = xPos;	
-				// Make spaces taken by horizontal or vertical moves unavailable
-				columnsAndRows(yPos, xPos, board, numQueens, n); 
+		for(int count = 0; count < 1; count++){ // start at each position in first row
+			// Reset board and data
+			//solutionsRemaining = true;
 			
-				// Make spaces taken by diagonal moves unavailable
-				diagonalMoves(yPos, xPos, board, numQueens, n);
-
-				// Make spaces taken by knight moves unavailable			
-				knightMoves(yPos, xPos, board, numQueens, n);
-				
-				numQueens++;	
-				cout << "numQueens " << numQueens << endl;
+			for(int i = 0; i < n; i++){
+				for(int j = 0; j < n; j++){
+					board[i][j] = 99;
+				}
 			}
-			else {
-				if((yPos == (n-1)) && (xPos == (n-1))){	// have checked last location	
+			numQueens = 0;
+			queenPositions[numQueens].y = 0;
+			queenPositions[numQueens].x = count;
+			board[0][count] = (40 + numQueens);
+			// Make spaces taken by horizontal or vertical moves unavailable
+			columnsAndRows(0, count, board, numQueens, n); 
+				
+			// Make spaces taken by diagonal moves unavailable
+			diagonalMoves(0, count, board, numQueens, n);
+
+			// Make spaces taken by knight moves unavailable			
+			knightMoves(0, count, board, numQueens, n);
+			columnStart = count;
+			row = 1;
+			column = 0;
+			numQueens = 1;
+			
+			for(int i = 1; i < n; i++){
+				queenPositions[i].y = -1;
+				queenPositions[i].x = -1;				
+			}
+			printArray(board, n);
+			
+			// Begin search
+			while(solutionsRemaining){				
+				positionFound = updatePosition(row, column, n, board);
+				if(positionFound){ // position available
+					board[row][column] = (40 + numQueens);
+					cout << "New position: " << column << " " << row << endl;
+					queenPositions[numQueens].y = row;
+					queenPositions[numQueens].x = column;	
+					// Make spaces taken by horizontal or vertical moves unavailable
+					columnsAndRows(row, column, board, numQueens, n); 
+				
+					// Make spaces taken by diagonal moves unavailable
+					diagonalMoves(row, column, board, numQueens, n);
+
+					// Make spaces taken by knight moves unavailable			
+					knightMoves(row, column, board, numQueens, n);
+					
+					printArray(board, n);
+					numQueens++;	
+					if(row < (n-1)){
+						row++;
+						column = -1;
+					}
+					cout << "row: " << row << " numQueens: " << numQueens << endl;
+				}
+				else { // row is unavailable	
+					printArray(board, n);
 					if(numQueens == n){ // if there are n queens on the board
 						cout << "SOLUTION FOUND!" << endl;
 						solutions.push_back(queenPositions);
 						numSolutionsRecorded++;
-						printSolution(queenPositions);							
+						printSolution(queenPositions);						
 					}
-					else { // not a solution, time to backtrack
-						positionFound = checkRemainingPositions(board, n, triedPositions);
-						cout << "Backtracking? " << positionFound << endl;	
-						if(!positionFound){ // no untried positions
-							printSolution(triedPositions);
-							triedPositions.clear();
-						}
+					
+					if(row == 0){ // correct exit condition?
+						solutionsRemaining = false;
+						break;
 					}
+					
 					numQueens--;
-					coordinate c;
-					c.x = queenPositions[numQueens].x;
-					c.y = queenPositions[numQueens].y;
+					column = queenPositions[numQueens].x;
+					row = queenPositions[numQueens].y;
+					
+					queenPositions[numQueens].x = -1;
+					queenPositions[numQueens].y = -1;					
 					printSolution(queenPositions);
-					cout << "Failed: " << c.x << " " << c.y << endl;					
-					triedPositions.push_back(c);
-					board[c.y][c.x] = 99;
+					cout << "Failed: " << column << " " << row << endl;					
+					board[row][column] = 99;
 					for(int i = 0; i < n; i++){
 						for(int j = 0; j < n; j++){
 							if(board[i][j] == numQueens){
@@ -313,11 +352,10 @@ int main(int argc, char *argv[]){
 							}
 						}
 					}
-					if(numQueens == 0){
-						if((c.x == (n-1)) && (c.y == (n-1))){
-							solutionsRemaining = false;
-						}
-					}
+					//column++;
+					
+					cout << " New position: " << (column+1) << " " << row << endl;
+					printArray(board, n);
 				}
 			}
 		}
