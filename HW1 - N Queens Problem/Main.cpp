@@ -42,7 +42,7 @@ bool updatePosition(int &y, int &x, int N, int** b){
 		check = false;
 	}
 	
-	cout << "From updatePosition: " << x << " " << y << endl;
+	// cout << "From updatePosition: " << x << " " << y << endl; // debugging
 	return check;
 }
 
@@ -217,10 +217,8 @@ int main(int argc, char *argv[]){
 	// Variable Declarations
 	int n, numSolutions = 0, numQueens = 0;
 	int row = 0, column = -1;
-	int columnStart = 0;
 	bool solutionsRemaining = true, positionFound = false;
 	int numSolutionsRecorded = 0;
-	int count = 0;
 	string filename = "";
 
 	// Handling command line arguments
@@ -231,7 +229,7 @@ int main(int argc, char *argv[]){
 	}
 	else { // otherwise, process the arguments
 		n = atoi(argv[1]);
-		cout << n << endl;
+		// cout << n << endl; // debugging
 		
 		filename = argv[2];
 	}
@@ -251,115 +249,116 @@ int main(int argc, char *argv[]){
 			}
 		}
 		
+		// Set up a dummy coordinate to initialize queenPositions with
 		coordinate blank;
 		blank.x = -1;
 		blank.y = -1;
 
 		// Initialize current positions vector
+		// This vector's data is overwritten often, and never fully cleared out.
 		vector<coordinate> queenPositions (n, blank);
 
 		// Initialize solutions vector
 		vector<vector<coordinate> > solutions;
 		
-		// Initialize tried positions vector
-		vector<coordinate> triedPositions;
-		
 		// Solution algorithm
-		for(int count = 0; count < 1; count++){ // start at each position in first row
+			int count = 0;
 			// Reset board and data
 			//solutionsRemaining = true;
 			
 			for(int i = 0; i < n; i++){
 				for(int j = 0; j < n; j++){
 					board[i][j] = 99;
-				}
-			}
+				} // end inner for
+			} // end outer for
+			
+			// Place first queen
 			numQueens = 0;
 			queenPositions[numQueens].y = 0;
 			queenPositions[numQueens].x = count;
 			board[0][count] = (40 + numQueens);
-			// Make spaces taken by horizontal or vertical moves unavailable
+			
+			// Make spaces taken by superqueen moves unavailable
 			columnsAndRows(0, count, board, numQueens, n); 
-				
-			// Make spaces taken by diagonal moves unavailable
-			diagonalMoves(0, count, board, numQueens, n);
-
-			// Make spaces taken by knight moves unavailable			
+			diagonalMoves(0, count, board, numQueens, n);		
 			knightMoves(0, count, board, numQueens, n);
-			columnStart = count;
+			
+			// Move down one row
 			row = 1;
 			column = 0;
 			numQueens = 1;
 			
+			// Blank out all but first position
 			for(int i = 1; i < n; i++){
 				queenPositions[i].y = -1;
 				queenPositions[i].x = -1;				
-			}
-			printArray(board, n);
+			} // end for
+			
+			//printArray(board, n); // debugging purposes
 			
 			// Begin search
 			while(solutionsRemaining){				
 				positionFound = updatePosition(row, column, n, board);
 				if(positionFound){ // position available
 					board[row][column] = (40 + numQueens);
-					cout << "New position: " << column << " " << row << endl;
+					// cout << "New position: " << column << " " << row << endl; // debugging
 					queenPositions[numQueens].y = row;
 					queenPositions[numQueens].x = column;	
-					// Make spaces taken by horizontal or vertical moves unavailable
+					
+					// Make spaces taken by superqueen moves unavailable
 					columnsAndRows(row, column, board, numQueens, n); 
-				
-					// Make spaces taken by diagonal moves unavailable
-					diagonalMoves(row, column, board, numQueens, n);
-
-					// Make spaces taken by knight moves unavailable			
+					diagonalMoves(row, column, board, numQueens, n);		
 					knightMoves(row, column, board, numQueens, n);
 					
-					printArray(board, n);
+					// printArray(board, n); // debugging
 					numQueens++;	
 					if(row < (n-1)){
 						row++;
 						column = -1;
-					}
-					cout << "row: " << row << " numQueens: " << numQueens << endl;
-				}
+					} // end if
+					//cout << "row: " << row << " numQueens: " << numQueens << endl; // debugging
+				} // end if(positionFound)
 				else { // row is unavailable	
-					printArray(board, n);
+					// printArray(board, n); // debugging
 					if(numQueens == n){ // if there are n queens on the board
-						cout << "SOLUTION FOUND!" << endl;
+						// cout << "SOLUTION FOUND!" << endl; // debugging
 						solutions.push_back(queenPositions);
 						numSolutionsRecorded++;
-						printSolution(queenPositions);						
-					}
+						// printSolution(queenPositions); // debugging						
+					} // end if(numQueens == n)
 					
-					if(row == 0){ // correct exit condition?
+					if(row == 0){ // we have backtracked all the way to row 0, and should restart
 						solutionsRemaining = false;
 						break;
-					}
+					} // end if
 					
+					// Return to prior state with 1 less queen
 					numQueens--;
 					column = queenPositions[numQueens].x;
 					row = queenPositions[numQueens].y;
 					
+					// Blank out bad position
 					queenPositions[numQueens].x = -1;
 					queenPositions[numQueens].y = -1;					
-					printSolution(queenPositions);
-					cout << "Failed: " << column << " " << row << endl;					
+					
+					//printSolution(queenPositions); //debugging
+					//cout << "Failed: " << column << " " << row << endl; // debugging				
+					
+					// Remove all traces of prior queen
 					board[row][column] = 99;
 					for(int i = 0; i < n; i++){
 						for(int j = 0; j < n; j++){
 							if(board[i][j] == numQueens){
 								board[i][j] = 99;
-							}
-						}
-					}
-					//column++;
+							} // end if
+						} // end inner for
+					} // end outer for
 					
-					cout << " New position: " << (column+1) << " " << row << endl;
-					printArray(board, n);
-				}
-			}
-		}
+					//cout << " New position: " << (column+1) << " " << row << endl; // debugging
+					//printArray(board, n); // debugging
+				} // end else (position not available)
+			} // end while
 		writeSolutionsToFile(filename, solutions);
-	}	
+	} // end if((n >= 0) && (n < 15)) 
 	return 0;
-}
+} // end main
