@@ -41,6 +41,8 @@ bool updatePosition(int &y, int &x, int N, int** b){
 	else {
 		check = false;
 	}
+	
+	// cout << "From updatePosition: " << x << " " << y << endl; // debugging
 	return check;
 }
 
@@ -48,9 +50,11 @@ bool updatePosition(int &y, int &x, int N, int** b){
 void columnsAndRows(int y, int x, int **b, int nQ, int N){ 
 	for(int i = 0; i < N; i++){
 		if(b[y][i] == 99){
+			//cout << "Removing rows " << i << endl;
 			b[y][i] = nQ;
 		}
 		if(b[i][x] == 99){
+			//cout << "Removing columns " << i << endl;
 			b[i][x] = nQ;
 		}
 	}
@@ -60,6 +64,7 @@ void columnsAndRows(int y, int x, int **b, int nQ, int N){
 void checkDiagonalMoves(int y, int x, int **b, int nQ, int N, int yChange, int xChange){ 
 	while((y >= 0) && (x >= 0) && (y < N) && (x < N)){
 		if(b[y][x] == 99){
+			//cout << "Removing diagonals " << x << y << endl;
 			b[y][x] = nQ;
 		}
 		y += yChange;
@@ -73,18 +78,22 @@ void diagonalMoves(int y, int x, int **b, int nQ, int N){
 	
 	yShift = y - 1;
 	xShift = x - 1;
+	//cout << "Moving to upper left" << endl;
 	checkDiagonalMoves(yShift, xShift, b, nQ, N, -1, -1);
 			
 	yShift = y + 1;
 	xShift = x + 1;
+	//cout << "Moving to lower right" << endl;
 	checkDiagonalMoves(yShift, xShift, b, nQ, N, 1, 1);
 			
 	yShift = y + 1;
 	xShift = x - 1;
+	//cout << "Moving to lower left" << endl;
 	checkDiagonalMoves(yShift, xShift, b, nQ, N, 1, -1);
 			
 	yShift = y - 1;
 	xShift = x + 1;
+	//cout << "Moving to upper right" << endl;
 	checkDiagonalMoves(yShift, xShift, b, nQ, N, -1, 1);
 }
 
@@ -93,6 +102,7 @@ void checkKnightMoves(int y, int x, int **b, int nQ, int N){
 	if((y >= 0) && (y < N)){
 		if((x >= 0) && (x < N)){
 			if(b[y][x] == 99){
+				//cout << "Removing knights " << x << y << endl;
 				b[y][x] = nQ;	
 			}
 		}
@@ -219,6 +229,8 @@ int main(int argc, char *argv[]){
 	}
 	else { // otherwise, process the arguments
 		n = atoi(argv[1]);
+		// cout << n << endl; // debugging
+		
 		filename = argv[2];
 	}
 
@@ -250,87 +262,102 @@ int main(int argc, char *argv[]){
 		vector<vector<coordinate> > solutions;
 		
 		// Solution algorithm
-		
-		// Reset board and data
-		int count = 0;	
-		for(int i = 0; i < n; i++){
-			for(int j = 0; j < n; j++){
-				board[i][j] = 99;	
-			} // end inner for
-		} // end outer for
+			int count = 0;
+			// Reset board and data
+			//solutionsRemaining = true;
 			
-		// Place first queen
-		numQueens = 0;
-		queenPositions[numQueens].y = 0;
-		queenPositions[numQueens].x = count;
-		board[0][count] = (40 + numQueens);
+			for(int i = 0; i < n; i++){
+				for(int j = 0; j < n; j++){
+					board[i][j] = 99;
+				} // end inner for
+			} // end outer for
 			
-		// Make spaces taken by superqueen moves unavailable
-		columnsAndRows(0, count, board, numQueens, n); 
-		diagonalMoves(0, count, board, numQueens, n);			
-		knightMoves(0, count, board, numQueens, n);
+			// Place first queen
+			numQueens = 0;
+			queenPositions[numQueens].y = 0;
+			queenPositions[numQueens].x = count;
+			board[0][count] = (40 + numQueens);
 			
-		// Move down one row
-		row = 1;
-		column = 0;
-		numQueens = 1;
+			// Make spaces taken by superqueen moves unavailable
+			columnsAndRows(0, count, board, numQueens, n); 
+			diagonalMoves(0, count, board, numQueens, n);		
+			knightMoves(0, count, board, numQueens, n);
 			
-		// Blank out all but first position
-		for(int i = 1; i < n; i++){
-			queenPositions[i].y = -1;
-			queenPositions[i].x = -1;				
-		} // end for
+			// Move down one row
+			row = 1;
+			column = 0;
+			numQueens = 1;
 			
-		// Begin search
-		while(solutionsRemaining){				
-			positionFound = updatePosition(row, column, n, board);
-			if(positionFound){ // position available
-				board[row][column] = (40 + numQueens);
-				queenPositions[numQueens].y = row;
-				queenPositions[numQueens].x = column;	
+			// Blank out all but first position
+			for(int i = 1; i < n; i++){
+				queenPositions[i].y = -1;
+				queenPositions[i].x = -1;				
+			} // end for
+			
+			//printArray(board, n); // debugging purposes
+			
+			// Begin search
+			while(solutionsRemaining){				
+				positionFound = updatePosition(row, column, n, board);
+				if(positionFound){ // position available
+					board[row][column] = (40 + numQueens);
+					// cout << "New position: " << column << " " << row << endl; // debugging
+					queenPositions[numQueens].y = row;
+					queenPositions[numQueens].x = column;	
 					
-				// Make spaces taken by superqueen moves unavailable
-				columnsAndRows(row, column, board, numQueens, n); 
-				diagonalMoves(row, column, board, numQueens, n);		
-				knightMoves(row, column, board, numQueens, n);
+					// Make spaces taken by superqueen moves unavailable
+					columnsAndRows(row, column, board, numQueens, n); 
+					diagonalMoves(row, column, board, numQueens, n);		
+					knightMoves(row, column, board, numQueens, n);
 					
-				numQueens++;	
-				if(row < (n-1)){
-					row++;
-					column = -1;
-				} // end if
-			} // end if(positionFound)
-			else { // row is unavailable	
-				if(numQueens == n){ // if there are n queens on the board
-					solutions.push_back(queenPositions);
-					numSolutionsRecorded++;					
-				} // end if(numQueens == n)
+					// printArray(board, n); // debugging
+					numQueens++;	
+					if(row < (n-1)){
+						row++;
+						column = -1;
+					} // end if
+					//cout << "row: " << row << " numQueens: " << numQueens << endl; // debugging
+				} // end if(positionFound)
+				else { // row is unavailable	
+					// printArray(board, n); // debugging
+					if(numQueens == n){ // if there are n queens on the board
+						// cout << "SOLUTION FOUND!" << endl; // debugging
+						solutions.push_back(queenPositions);
+						numSolutionsRecorded++;
+						// printSolution(queenPositions); // debugging						
+					} // end if(numQueens == n)
 					
-				if(row == 0){ // we have backtracked all the way to row 0, and should restart
-					solutionsRemaining = false;
-					break;
-				} // end if
+					if(row == 0){ // we have backtracked all the way to row 0, and should restart
+						solutionsRemaining = false;
+						break;
+					} // end if
 					
-				// Return to prior state with 1 less queen
-				numQueens--;
-				column = queenPositions[numQueens].x;
-				row = queenPositions[numQueens].y;
+					// Return to prior state with 1 less queen
+					numQueens--;
+					column = queenPositions[numQueens].x;
+					row = queenPositions[numQueens].y;
 					
-				// Blank out bad position
-				queenPositions[numQueens].x = -1;
-				queenPositions[numQueens].y = -1;								
+					// Blank out bad position
+					queenPositions[numQueens].x = -1;
+					queenPositions[numQueens].y = -1;					
 					
-				// Remove all traces of prior queen
-				board[row][column] = 99;
-				for(int i = 0; i < n; i++){
-					for(int j = 0; j < n; j++){
-						if(board[i][j] == numQueens){
-							board[i][j] = 99;
-						} // end if
-					} // end inner for
-				} // end outer for
-			} // end else (position not available)
-		} // end while
+					//printSolution(queenPositions); //debugging
+					//cout << "Failed: " << column << " " << row << endl; // debugging				
+					
+					// Remove all traces of prior queen
+					board[row][column] = 99;
+					for(int i = 0; i < n; i++){
+						for(int j = 0; j < n; j++){
+							if(board[i][j] == numQueens){
+								board[i][j] = 99;
+							} // end if
+						} // end inner for
+					} // end outer for
+					
+					//cout << " New position: " << (column+1) << " " << row << endl; // debugging
+					//printArray(board, n); // debugging
+				} // end else (position not available)
+			} // end while
 		writeSolutionsToFile(filename, solutions);
 	} // end if((n >= 0) && (n < 15)) 
 	return 0;
