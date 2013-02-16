@@ -185,11 +185,12 @@ void printAllSolutions(vector<vector<coordinate> > &s){
 }
 
 // Write the output to a file
-void writeSolutionsToFile(string f, vector<vector<coordinate> > &s){
+void writeSolutionsToFile(string f, int N, vector<vector<coordinate> > &s){
 	ofstream file;
 	file.open(f.c_str());
+	file << "Number of Super Queens: " << N << "\n";
 	for(int i = 0; i < s.size(); i++){
-		file << "Solution " << (i + 1) << ":\n";
+		file << "Solution " << (i + 1) << ": ";
 		for(int j = 0; j < s[i].size(); j++){
 			file << "(" << s[i][j].x << "," << s[i][j].y << ")";
 			if(j != (s[i].size() - 1)){
@@ -198,6 +199,7 @@ void writeSolutionsToFile(string f, vector<vector<coordinate> > &s){
 		}
 		file << "\n";
 	}
+	file << "Total number of solutions: " << s.size();
 	file.close();
 }
 
@@ -331,7 +333,7 @@ int main(int argc, char *argv[]){
 				} // end outer for
 			} // end else (position not available)
 		} // end while
-		writeSolutionsToFile(filename, solutions);
+		writeSolutionsToFile(filename, n, solutions);
 	} // end if((n >= 0) && (n < 15)) 
 	return 0;
 } // end main
