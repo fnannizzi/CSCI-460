@@ -62,6 +62,49 @@ void loadInputIntoTiles(vector<int> iV, vector<tile> &t){
 	}
 }
 
+// Add edges/links between tiles
+void addEdgesToTiles(vector<tile> &t){
+	t[0].links[0] = 3;
+	t[0].links[1] = 4;
+	
+	t[1].links[0] = 4;
+	t[1].links[1] = 5;
+	
+	t[2].links[0] = 5;
+	t[2].links[1] = 6;
+	
+	t[3].links[0] = 0;
+	t[3].links[1] = 4;
+	t[3].links[2] = 7;
+	
+	t[4].links[0] = 0;
+	t[4].links[1] = 1;
+	t[4].links[2] = 5;
+	t[4].links[3] = 8;
+	t[4].links[4] = 7;
+	t[4].links[5] = 3;
+	
+	t[5].links[0] = 1;
+	t[5].links[1] = 2;
+	t[5].links[2] = 6;
+	t[5].links[3] = 9;
+	t[5].links[4] = 8;
+	t[5].links[5] = 4;
+	
+	t[6].links[0] = 2;
+	t[6].links[1] = 5;
+	t[6].links[2] = 9;
+	
+	t[7].links[0] = 3;
+	t[7].links[1] = 4;
+	
+	t[8].links[0] = 4;
+	t[8].links[1] = 5;
+	
+	t[9].links[0] = 5;
+	t[9].links[1] = 6;
+}
+
 // Print the board (for testing)
 void printBoard(vector<tile> t){
 	cout << "  ";
@@ -103,6 +146,7 @@ int main(int argc, char *argv[]){
 	readFromInputFile(filename, inputValues);
 	loadInputIntoTiles(inputValues, tiles);
 	printBoard(tiles);
+	addEdgesToTiles(tiles);
 		
 	return 0;
 } // end main
