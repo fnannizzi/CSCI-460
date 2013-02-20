@@ -38,12 +38,58 @@ void readFromInputFile(string f, vector<int> &iV){
 	}
 }
 
+// Load the input into tile vector
+void loadInputIntoTiles(vector<int> iV, vector<tile> &t){
+	for(int i = 0; i < 3; i++){ // Load row 1
+		tile a(iV[i], i, 2);
+		t.push_back(a);
+	}
+	
+	for(int i = 3; i < 7; i++){ // Load row 2
+		if((i == 3) || (i == 6)){
+			tile a(iV[i], i, 3);
+			t.push_back(a);
+		}
+		else {
+			tile a(iV[i], i, 6);
+			t.push_back(a);
+		}
+	}
+	
+	for(int i = 7; i < 10; i++){ // Load row 3
+		tile a(iV[i], i, 2);
+		t.push_back(a);
+	}
+}
+
+// Print the board (for testing)
+void printBoard(vector<tile> t){
+	cout << "  ";
+	for(int i = 0; i < 3; i++){ // Print row 1
+		cout << setw(3) << t[i].value;
+	}
+	cout << endl;
+
+	for(int i = 3; i < 7; i++){ // Print row 2
+		cout << setw(3) << t[i].value;
+	}
+	cout << endl;
+	
+	cout << "  ";
+	for(int i = 7; i < 10; i++){ // Print row 3
+		cout << setw(3) << t[i].value;
+	}
+	cout << endl;	
+	
+}
+
 // Main 
 int main(int argc, char *argv[]){
 
 	// Variable Declarations
 	string filename = "";
 	vector<int> inputValues;
+	vector<tile> tiles;
 
 	// Handling command line arguments
 	if(argc == 2){ // store filename
@@ -55,6 +101,8 @@ int main(int argc, char *argv[]){
 	} // end else
 
 	readFromInputFile(filename, inputValues);
+	loadInputIntoTiles(inputValues, tiles);
+	printBoard(tiles);
 		
 	return 0;
 } // end main
