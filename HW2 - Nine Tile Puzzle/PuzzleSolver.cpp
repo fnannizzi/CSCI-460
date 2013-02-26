@@ -40,38 +40,61 @@ void readFromInputFile(string f, vector<int> &iV){
 
 // Load the input into tile vector
 void loadInputIntoTiles(vector<int> iV, vector<tile> &t){
-	for(int i = 0; i < 3; i++){ // Load row 1
-		tile a(iV[i], i, 2);
-		t.push_back(a);
-	}
+	// Tile 1
+	tile a(iV[0], 0, 3);
+	t.push_back(a);
 	
-	for(int i = 3; i < 7; i++){ // Load row 2
-		if((i == 3) || (i == 6)){
-			tile a(iV[i], i, 3);
-			t.push_back(a);
-		}
-		else {
-			tile a(iV[i], i, 6);
-			t.push_back(a);
-		}
-	}
+	//Tile 2
+	tile b(iV[1], 1, 4);
+	t.push_back(b);	
 	
-	for(int i = 7; i < 10; i++){ // Load row 3
-		tile a(iV[i], i, 2);
-		t.push_back(a);
-	}
+	//Tile 3
+	tile c(iV[2], 2, 3);
+	t.push_back(c);	
+	
+	//Tile 4
+	tile d(iV[3], 3, 3);
+	t.push_back(d);	
+
+	//Tile 5
+	tile e(iV[4], 4, 6);
+	t.push_back(e);
+	
+	//Tile 6
+	tile f(iV[5], 5, 6);
+	t.push_back(f);	
+			
+	//Tile 7
+	tile g(iV[6], 6, 3);
+	t.push_back(g);	
+			
+	//Tile 8
+	tile h(iV[7], 7, 3);
+	t.push_back(h);	
+		
+	//Tile 9
+	tile i(iV[8], 8, 4);
+	t.push_back(i);
+	
+	//Tile 10
+	tile j(iV[9], 9, 3);
+	t.push_back(j);	
 }
 
 // Add edges/links between tiles
 void addEdgesToTiles(vector<tile> &t){
 	t[0].links[0] = 3;
 	t[0].links[1] = 4;
+	t[0].links[2] = 1;
 	
 	t[1].links[0] = 4;
 	t[1].links[1] = 5;
+	t[1].links[2] = 0;
+	t[1].links[3] = 2;
 	
 	t[2].links[0] = 5;
 	t[2].links[1] = 6;
+	t[2].links[2] = 1;
 	
 	t[3].links[0] = 0;
 	t[3].links[1] = 4;
@@ -97,12 +120,16 @@ void addEdgesToTiles(vector<tile> &t){
 	
 	t[7].links[0] = 3;
 	t[7].links[1] = 4;
+	t[7].links[2] = 8;
 	
 	t[8].links[0] = 4;
 	t[8].links[1] = 5;
+	t[8].links[2] = 7;
+	t[8].links[3] = 9;
 	
 	t[9].links[0] = 5;
 	t[9].links[1] = 6;
+	t[9].links[2] = 8;
 }
 
 // Print the board (for testing)
@@ -126,7 +153,7 @@ void printBoard(vector<tile> t){
 	
 }
 
-// Calculate number of tiles out of place
+// Calculate number of tiles out of place relative to goal state
 int tilesOutOfPlaceRelativeToGoal(vector<tile> t){
 	int numTiles = 0;
 	for(int i = 0; i < 10; i++){
@@ -142,6 +169,31 @@ int tilesOutOfPlaceRelativeToGoal(vector<tile> t){
 	return numTiles;
 }
 
+/*// Calculate Manhattan distance to goal from particular tile
+int manhattanDistance(vector<tile> t, int tileIndex){
+	int distance = 0;
+	if(t[tileIndex].value == 
+}*/
+
+// Move a tile by one position
+void moveTilePosition(vector<int> &moves, int &numMoves, vector<tile> &t, int startPosition, int endPosition){
+	if(t[endPosition].value == 0){
+		for(int i = 0; i < t[startPosition].numLinks; i++){
+			if(t[startPosition].links[i] == endPosition){
+				int temp = t[startPosition].value;
+				moves.push_back(temp);
+				t[startPosition].value = 0;
+				t[endPosition].value = temp;
+				numMoves++;
+				break;
+			}
+		}
+	}
+	else {
+		cout << "ERROR: Cannot move tile into position that is not empty." << endl;
+	}
+}
+
 // Main 
 int main(int argc, char *argv[]){
 
@@ -149,6 +201,8 @@ int main(int argc, char *argv[]){
 	string filename = "";
 	vector<int> inputValues;
 	vector<tile> tiles;
+	vector<int> moves;
+	int numMoves = 0;
 
 	// Handling command line arguments
 	if(argc == 2){ // store filename
@@ -164,7 +218,11 @@ int main(int argc, char *argv[]){
 	printBoard(tiles);
 	addEdgesToTiles(tiles);
 	
-	cout << "num tiles out of place" << tilesOutOfPlaceRelativeToGoal(tiles) << endl;
+	for(int i = 0; i < 2; i++){
+		cout << "num tiles out of place" << tilesOutOfPlaceRelativeToGoal(tiles) << endl;
+		moveTilePosition(moves, numMoves, tiles, (i+1), i);
+		printBoard(tiles);
+	}
 		
 	return 0;
 } // end main
