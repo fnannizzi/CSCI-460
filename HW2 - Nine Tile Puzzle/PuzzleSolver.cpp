@@ -126,6 +126,22 @@ void printBoard(vector<tile> t){
 	
 }
 
+// Calculate number of tiles out of place
+int tilesOutOfPlaceRelativeToGoal(vector<tile> t){
+	int numTiles = 0;
+	for(int i = 0; i < 10; i++){
+		if(t[i].value != (i + 1)){
+			if(i != 9){
+				numTiles++;
+			}
+			else if(t[i].value != 0){
+				numTiles++;
+			}
+		}
+	}
+	return numTiles;
+}
+
 // Main 
 int main(int argc, char *argv[]){
 
@@ -147,6 +163,8 @@ int main(int argc, char *argv[]){
 	loadInputIntoTiles(inputValues, tiles);
 	printBoard(tiles);
 	addEdgesToTiles(tiles);
+	
+	cout << "num tiles out of place" << tilesOutOfPlaceRelativeToGoal(tiles) << endl;
 		
 	return 0;
 } // end main
