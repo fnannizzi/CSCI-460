@@ -153,6 +153,17 @@ void printBoard(vector<tile> t){
 	
 }
 
+// Print the solution and number of moves
+void printSolution(vector<int> moves, int numMoves){
+	cout << "Number of Misplaced Tiles: " << endl;
+	cout << "Sequence of tiles to be moved: ";
+	for(int i = 0; i < moves.size(); i++){
+		cout << moves[i] << " ";
+	}
+	cout << endl;
+	cout << "Number of moves: " << numMoves << endl;
+}
+
 // Calculate number of tiles out of place relative to goal state
 int tilesOutOfPlaceRelativeToGoal(vector<tile> t){
 	int numTiles = 0;
@@ -176,22 +187,57 @@ int manhattanDistance(vector<tile> t, int tileIndex){
 }*/
 
 // Move a tile by one position
-void moveTilePosition(vector<int> &moves, int &numMoves, vector<tile> &t, int startPosition, int endPosition){
+void moveTilePosition(vector<tile> &t, int startPosition, int endPosition){
 	if(t[endPosition].value == 0){
 		for(int i = 0; i < t[startPosition].numLinks; i++){
 			if(t[startPosition].links[i] == endPosition){
 				int temp = t[startPosition].value;
-				moves.push_back(temp);
 				t[startPosition].value = 0;
 				t[endPosition].value = temp;
-				numMoves++;
 				break;
 			}
 		}
 	}
 	else {
-		cout << "ERROR: Cannot move tile into position that is not empty." << endl;
+		cout << "ERROR: Cannot move tile." << endl;
 	}
+}
+
+// Determines the index of the empty space
+int locateEmptySpace(vector<tile> &t){
+	for(int i = 0; i < 10; i++){
+		if(t[i].value == 0){
+			return i;
+		}
+	}
+	return -1;
+}
+
+// Make next move based on number of tiles out of place relative to goal
+void nextMove(vector<int> &moves, int &numMoves, vector<tile> &t){
+	int position = locateEmptySpace(t);
+	if(position < 9){
+		vector<vector<tile> > nodes;
+		for(int i = 0; i < t[position].numLinks; i++){
+			vector<tile> node = t; 
+			moveTilePosition(node, t[position].links[i], position);
+			nodes.push_back(node);
+			//cout << "Node " << i << endl;
+			//printBoard(node);
+			//cout << endl;
+		}
+		int indexBestChoice = 0;
+		for(int i = 0; i < nodes.size(); i++){
+			if(tilesOutOfPlaceRelativeToGoal(nodes[i]) < 
+			   tilesOutOfPlaceRelativeToGoal(nodes[indexBestChoice])){
+				indexBestChoice = i;
+			}
+		}
+		moveTilePosition(t, t[position].links[indexBestChoice], position);
+		moves.push_back(t[position].value);
+		numMoves++;
+	}
+	
 }
 
 // Main 
@@ -213,16 +259,21 @@ int main(int argc, char *argv[]){
 		return 0;
 	} // end else
 
+	// Initialize board
 	readFromInputFile(filename, inputValues);
 	loadInputIntoTiles(inputValues, tiles);
-	printBoard(tiles);
 	addEdgesToTiles(tiles);
 	
-	for(int i = 0; i < 2; i++){
-		cout << "num tiles out of place" << tilesOutOfPlaceRelativeToGoal(tiles) << endl;
-		moveTilePosition(moves, numMoves, tiles, (i+1), i);
-		printBoard(tiles);
+	// Find a solution with heuristic 2: 
+	// number of tiles out of place relative to goal
+	while(tilesOutOfPlaceRelativeToGoal(tiles) > 0){
+		//cout << "num tiles out of place" << tilesOutOfPlaceRelativeToGoal(tiles) << endl;
+		nextMove(moves, numMoves, tiles);
+		//cout << "Decision: " << endl;
+		//printBoard(tiles);
+		//cout << endl;
 	}
+	printSolution(moves, numMoves);
 		
 	return 0;
 } // end main
