@@ -25,53 +25,53 @@ void readFromInputFile(string f, vector<int> &iV){
 }
 
 // Print the solution and number of moves
-void printSolutionOutOfPlace(vector<int> moves, int numMoves){
+void printSolutionOutOfPlace(vector<int> moves){
 	cout << "Number of Misplaced Tiles: " << endl;
 	cout << "Sequence of tiles to be moved: ";
 	for(int i = 0; i < moves.size(); i++){
 		cout << moves[i] << " ";
 	}
 	cout << endl;
-	cout << "Number of moves: " << numMoves << endl;
+	cout << "Number of moves: " << moves.size() << endl;
+}
+
+// Expand a node
+void expandNode(Node p, vector<Node> &successor){
+	successor.clear();
+	int position = p.locateEmptySpace();
+	for(int i = 0; i < p.board[position].numLinks; i++){
+		Node node(&p, p.board, (p.numMovesToNode + 1)); 
+		node.moveTilePosition(p.board[position].links[i], position);
+		successor.push_back(node);
+		//cout << "Node " << i << endl;
+		//printBoard(node);
+		//cout << endl;
+	}
 }
 
 // Make next move based on number of tiles out of place relative to goal
-void nextMove(vector<int> &moves, int &numMoves, Node &p){
-	int position = p.locateEmptySpace();
-	if(position < 9){
-		vector<Node> nodes;
-		for(int i = 0; i < p.board[position].numLinks; i++){
-			Node node = p; 
-			node.moveTilePosition(p.board[position].links[i], position);
-			nodes.push_back(node);
-			//cout << "Node " << i << endl;
-			//printBoard(node);
-			//cout << endl;
+void nextMove(vector<int> &moves, Node &p, vector<Node> &successor, vector<Node> &closed){
+	int indexBestChoice = 0;
+	for(int i = 0; i < successor.size(); i++){
+		if(successor[i].combinedScore < 
+			successor[indexBestChoice].combinedScore){
+			indexBestChoice = i;
+			cout << "indexBestChoice: " << i << endl;
 		}
-		int indexBestChoice = 0;
-		for(int i = 0; i < nodes.size(); i++){
-			if(nodes[i].tilesOutOfPlaceRelativeToGoal() < 
-			   nodes[indexBestChoice].tilesOutOfPlaceRelativeToGoal()){
-				indexBestChoice = i;
-				cout << "indexBestChoice: " << i << endl;
-			}
-		}
-		p.moveTilePosition(p.board[position].links[indexBestChoice], position);
-		moves.push_back(p.board[position].value);
-		numMoves++;
-	}	
-}
+	}
+	int position = p.locateEmptySpace();		
+	p = successor[indexBestChoice];
+	moves.push_back(p.board[position].value);
+	closed.push_back(p);
+}	
 
 // Main 
 int main(int argc, char *argv[]){
 
-	// Variable Declarations
+	// Handling command line arguments
 	string filename = "";
 	vector<int> inputValues;
-	vector<int> moves;
-	int numMoves = 0;
-
-	// Handling command line arguments
+	
 	if(argc == 2){ // store filename
 		filename = argv[1];
 	} // end if
@@ -80,26 +80,26 @@ int main(int argc, char *argv[]){
 		return 0;
 	} // end else
 
+	// Data
+	vector<Node> successorNodes;
+	vector<Node> closedNodes;
+	vector<int> moves;
+
 	// Initialize board
 	readFromInputFile(filename, inputValues);
 	Node puzzle(inputValues);
-	
-	
-	
+	closedNodes.push_back(puzzle);
 	
 	// Find a solution with heuristic 2: 
 	// number of tiles out of place relative to goal
 	while(puzzle.tilesOutOfPlaceRelativeToGoal() > 0){
-		nextMove(moves, numMoves, puzzle);
+		expandNode(puzzle, successorNodes);
+		nextMove(moves, puzzle, successorNodes, closedNodes);
 		cout << "Decision: " << endl;
 		puzzle.printBoard();
 		cout << endl;
-		cout << "Number of moves: " << numMoves << endl;
-		if(numMoves > 12){
-			break;
-		}
 	}
-	printSolutionOutOfPlace(moves, numMoves);
+	printSolutionOutOfPlace(moves);
 		
 	return 0;
 } // end main

@@ -90,7 +90,10 @@ void Node::moveTilePosition(int startPosition, int endPosition){
 				board[endPosition].value = temp;
 				break;
 			}
-		}
+		}	
+		numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
+		numMovesToNode++;
+		combinedScore = numTilesOutOfPlace + numMovesToNode;
 	}
 	else {
 		cout << "ERROR: Cannot move tile." << endl;
