@@ -37,15 +37,12 @@ void printSolutionOutOfPlace(vector<int> moves){
 
 // Expand a node
 void expandNode(Node p, vector<Node> &successor){
-	successor.clear();
+	//successor.clear();
 	int position = p.locateEmptySpace();
 	for(int i = 0; i < p.board[position].numLinks; i++){
-		Node node(&p, p.board, (p.numMovesToNode + 1)); 
+		Node node(&p, p.board, p.numMovesToNode); 
 		node.moveTilePosition(p.board[position].links[i], position);
 		successor.push_back(node);
-		//cout << "Node " << i << endl;
-		//node.printBoard();
-		//cout << endl;
 	}
 }
 
@@ -59,28 +56,73 @@ bool matchClosedNodes(Node successor, vector<Node> closed){
 	return false;
 }
 
-
-// Make next move based on number of tiles out of place relative to goal
-void nextMove(vector<int> &moves, Node &p, vector<Node> &successor, vector<Node> &closed){
-	int indexBestChoice = 0;
+// Find successor of parent with lowest combined score
+int locateBestSuccessorNode(Node p, vector<Node> successor, vector<Node> closed){
+	cout << "Board as is: " << endl;
+	p.printBoard();
+	cout << endl;
+	int index = 0;
 	for(int i = 0; i < successor.size(); i++){
-		if(successor[i].combinedScore < 
-			successor[indexBestChoice].combinedScore){
-			if(!matchClosedNodes(successor[i], closed)){
-				indexBestChoice = i;
-				cout << "indexBestChoice: " << i << endl;
+		cout << "Node " << i << endl; // debugging
+		cout << "Score: " << successor[i].numTilesOutOfPlace << endl; // debugging
+		if(!matchClosedNodes(successor[i], closed)){
+			cout << "MatchClosedNodes didn't fail" << endl;
+			if(*(successor[i].predecessor) == p){
+				cout << "Predecessors match" << endl;
+				//cout << "Node " << i << endl; // debugging
+				//cout << "Score: " << successor[i].numTilesOutOfPlace << endl; // debugging
+				if(successor[i].combinedScore < successor[index].combinedScore){
+					index = i;
+					cout << "Index: " << i << endl; //debugging
+				}
+				//successor[i].printBoard(); // debugging
+				//cout << endl; // debugging
 			}
 		}
+		successor[i].printBoard(); // debugging
+		cout << endl; // debugging
 	}
-	if(indexBestChoice == 0){
-		if(matchClosedNodes(successor[indexBestChoice], closed)){
-			cout << "FAILURE FAILURE FAILURE!" << endl;
+	if(index == 0){
+		if(matchClosedNodes(successor[index], closed)){
+			cout << "FAILURE: successor is closed" << endl;
+			index = -1;
+		}
+		else if(!(*(successor[index].predecessor) == p)){
+			cout << "FAILURE: successor not from predecessor" << endl;
+			index = -1;
 		}
 	}
-	int position = p.locateEmptySpace();		
-	p = successor[indexBestChoice];
-	moves.push_back(p.board[position].value);
-	closed.push_back(p);
+	
+	return index;
+}
+
+// Make next move based on number of tiles out of place relative to goal
+bool nextMove(vector<int> &moves, Node &p, vector<Node> &successor, vector<Node> &closed){
+	int indexBestChoice = locateBestSuccessorNode(p, successor, closed);
+	if(indexBestChoice >= 0){ //successor found
+		int position = p.locateEmptySpace();		
+		p = successor[indexBestChoice];
+		moves.push_back(p.board[position].value);
+		closed.push_back(p);
+		successor.erase(successor.begin() + indexBestChoice);
+		return true;
+	}
+	else { // no successors found
+		cout << "OriginalStateOfBoard: " << p.isOriginalStateOfBoard << endl;
+		if(p.isOriginalStateOfBoard){
+			cout << "No successors found for original state of board" << endl;
+			moves.pop_back();
+			nextMove(moves, p, successor, closed);
+			return false;
+		}
+		else {
+			cout << "No successors found" << endl;
+			p = *(p.predecessor);
+			moves.pop_back();
+			nextMove(moves, p, successor, closed);
+			return false;
+		}
+	}
 }	
 
 // Main 
@@ -103,6 +145,7 @@ int main(int argc, char *argv[]){
 	vector<Node> closedNodes;
 	vector<int> moves;
 	int count = 0;
+	bool success = true;
 
 	// Initialize board
 	readFromInputFile(filename, inputValues);
@@ -113,11 +156,16 @@ int main(int argc, char *argv[]){
 	// number of tiles out of place relative to goal
 	while(puzzle.tilesOutOfPlaceRelativeToGoal() > 0){
 		expandNode(puzzle, successorNodes);
-		nextMove(moves, puzzle, successorNodes, closedNodes);
-		cout << "Decision: " << endl;
-		puzzle.printBoard();
-		cout << endl;
-		count++;
+		success = nextMove(moves, puzzle, successorNodes, closedNodes);
+		if(success){
+			cout << "Decision: " << endl;
+			puzzle.printBoard();
+			cout << endl;
+			count++;
+		}
+		else {
+			return 0;
+		}
 		if(count > 10){
 			return 0;
 		}

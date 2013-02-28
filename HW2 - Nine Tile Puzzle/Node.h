@@ -31,6 +31,7 @@ class Node {
 		int numTilesOutOfPlace;
 		int numMovesToNode;
 		int combinedScore;
+		bool isOriginalStateOfBoard;
 	
 		// Functions
 		Node(vector<int>);
@@ -44,8 +45,16 @@ class Node {
 		void moveTilePosition(int, int);
 		int locateEmptySpace();
 		bool matchBoard(vector<tile>);
+		bool operator == (Node);
 
 };
+
+bool Node::operator== (Node param){
+	if(!matchBoard(param.board)){
+		return false;
+	}
+	return true;
+}
 
 // Compares board against another board to check for a match
 bool Node::matchBoard(vector<tile> b){
@@ -73,6 +82,7 @@ Node::Node(vector<int> inputValues){
 	loadInputIntoTiles(inputValues);
 	addEdgesToTiles();
 	
+	isOriginalStateOfBoard = true;
 	numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
 	numMovesToNode = 0;
 	combinedScore = numTilesOutOfPlace + numMovesToNode;
@@ -83,6 +93,7 @@ Node::Node(Node* p, vector<tile> b, int numMoves){
 	predecessor = p;
 	board = b;
 	
+	isOriginalStateOfBoard = false;
 	numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
 	numMovesToNode = numMoves;
 	combinedScore = numTilesOutOfPlace + numMovesToNode;
