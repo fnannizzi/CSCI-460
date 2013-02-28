@@ -43,8 +43,19 @@ class Node {
 		//int manhattanDistance(int);
 		void moveTilePosition(int, int);
 		int locateEmptySpace();
+		bool matchBoard(vector<tile>);
 
 };
+
+// Compares board against another board to check for a match
+bool Node::matchBoard(vector<tile> b){
+	for(int i = 0; i < 10; i++){
+		if(board[i].value != b[i].value){
+			return false;
+		}
+	}
+	return true;
+}
 
 // Determines the index of the empty space
 int Node::locateEmptySpace(){

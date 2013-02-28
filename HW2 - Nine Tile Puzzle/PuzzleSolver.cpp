@@ -17,7 +17,7 @@ void readFromInputFile(string f, vector<int> &iV){
 	ifstream file(f.c_str());
 	if(file.is_open()){
 		while(file >> nextInt){
-			cout << "Read in " << nextInt << endl;
+			//cout << "Read in " << nextInt << endl;
 			iV.push_back(nextInt);
 		}
 		file.close();
@@ -44,10 +44,21 @@ void expandNode(Node p, vector<Node> &successor){
 		node.moveTilePosition(p.board[position].links[i], position);
 		successor.push_back(node);
 		//cout << "Node " << i << endl;
-		//printBoard(node);
+		//node.printBoard();
 		//cout << endl;
 	}
 }
+
+// Compare successor node to all closed nodes
+bool matchClosedNodes(Node successor, vector<Node> closed){
+	for(int i = 0; i < closed.size(); i++){
+		if(successor.matchBoard(closed[i].board)){
+			return true;
+		}
+	}
+	return false;
+}
+
 
 // Make next move based on number of tiles out of place relative to goal
 void nextMove(vector<int> &moves, Node &p, vector<Node> &successor, vector<Node> &closed){
@@ -55,8 +66,15 @@ void nextMove(vector<int> &moves, Node &p, vector<Node> &successor, vector<Node>
 	for(int i = 0; i < successor.size(); i++){
 		if(successor[i].combinedScore < 
 			successor[indexBestChoice].combinedScore){
-			indexBestChoice = i;
-			cout << "indexBestChoice: " << i << endl;
+			if(!matchClosedNodes(successor[i], closed)){
+				indexBestChoice = i;
+				cout << "indexBestChoice: " << i << endl;
+			}
+		}
+	}
+	if(indexBestChoice == 0){
+		if(matchClosedNodes(successor[indexBestChoice], closed)){
+			cout << "FAILURE FAILURE FAILURE!" << endl;
 		}
 	}
 	int position = p.locateEmptySpace();		
@@ -84,6 +102,7 @@ int main(int argc, char *argv[]){
 	vector<Node> successorNodes;
 	vector<Node> closedNodes;
 	vector<int> moves;
+	int count = 0;
 
 	// Initialize board
 	readFromInputFile(filename, inputValues);
@@ -98,6 +117,10 @@ int main(int argc, char *argv[]){
 		cout << "Decision: " << endl;
 		puzzle.printBoard();
 		cout << endl;
+		count++;
+		if(count > 10){
+			return 0;
+		}
 	}
 	printSolutionOutOfPlace(moves);
 		
