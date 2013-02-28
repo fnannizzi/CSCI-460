@@ -26,8 +26,8 @@ struct tile {
 class Node {
 	public:
 		// Data
+		Node* predecessorNode;
 		vector<tile> board;
-		Node* predecessor;
 		int numTilesOutOfPlace;
 		int numMovesToNode;
 		int combinedScore;
@@ -46,8 +46,48 @@ class Node {
 		int locateEmptySpace();
 		bool matchBoard(vector<tile>);
 		bool operator == (Node);
+		void revertToPredecessor();
 
 };
+
+// Constructor for start node
+Node::Node(vector<int> inputValues){
+	predecessorNode = NULL;
+	loadInputIntoTiles(inputValues);
+	addEdgesToTiles();
+	
+	isOriginalStateOfBoard = true;
+	numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
+	numMovesToNode = 0;
+	combinedScore = numTilesOutOfPlace + numMovesToNode;
+}
+
+// Constructor for all other nodes
+Node::Node(Node* p, vector<tile> b, int numMoves){
+	predecessorNode = p;
+	board = b;
+	
+	isOriginalStateOfBoard = false;
+	numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
+	numMovesToNode = numMoves;
+	combinedScore = numTilesOutOfPlace + numMovesToNode;
+}
+
+// Deconstructor
+Node::~Node(){}
+
+void Node::revertToPredecessor(){
+	if(predecessorNode != NULL){
+		board = predecessorNode->board;
+	
+		isOriginalStateOfBoard = predecessorNode->isOriginalStateOfBoard;
+		numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
+		numMovesToNode = predecessorNode->numMovesToNode;
+		combinedScore = numTilesOutOfPlace + numMovesToNode;
+	
+		predecessorNode = predecessorNode->predecessorNode;
+	}
+}
 
 bool Node::operator== (Node param){
 	if(!matchBoard(param.board)){
@@ -75,32 +115,6 @@ int Node::locateEmptySpace(){
 	}
 	return -1;
 }
-
-// Constructor for start node
-Node::Node(vector<int> inputValues){
-	predecessor = NULL;
-	loadInputIntoTiles(inputValues);
-	addEdgesToTiles();
-	
-	isOriginalStateOfBoard = true;
-	numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
-	numMovesToNode = 0;
-	combinedScore = numTilesOutOfPlace + numMovesToNode;
-}
-
-// Constructor for all other nodes
-Node::Node(Node* p, vector<tile> b, int numMoves){
-	predecessor = p;
-	board = b;
-	
-	isOriginalStateOfBoard = false;
-	numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
-	numMovesToNode = numMoves;
-	combinedScore = numTilesOutOfPlace + numMovesToNode;
-}
-
-// Deconstructor
-Node::~Node(){}
 
 // Move a tile by one position
 void Node::moveTilePosition(int startPosition, int endPosition){

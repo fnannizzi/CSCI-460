@@ -36,12 +36,20 @@ void printSolutionOutOfPlace(vector<int> moves){
 }
 
 // Expand a node
-void expandNode(Node p, vector<Node> &successor){
-	//successor.clear();
-	int position = p.locateEmptySpace();
-	for(int i = 0; i < p.board[position].numLinks; i++){
-		Node node(&p, p.board, p.numMovesToNode); 
-		node.moveTilePosition(p.board[position].links[i], position);
+void expandNode(Node* p, vector<Node> &successor){
+	int position = p->locateEmptySpace();
+	cout << "Address of predecessor from expandNode: " << p << endl;
+	cout << "Current board from expandNode: " << endl;
+	p->printBoard();
+	cout << endl;
+	for(int i = 0; i < p->board[position].numLinks; i++){
+		vector<tile> tempBoard = p->board;
+		Node node(p, tempBoard, p->numMovesToNode); 
+		cout << "Position to move tiles from expandNode: " 
+		<< p->board[position].links[i] << ", " << position << endl;
+		cout << "Current board from expandNode: " << endl;
+		node.printBoard();
+		node.moveTilePosition(p->board[position].links[i], position);
 		successor.push_back(node);
 	}
 }
@@ -57,70 +65,83 @@ bool matchClosedNodes(Node successor, vector<Node> closed){
 }
 
 // Find successor of parent with lowest combined score
-int locateBestSuccessorNode(Node p, vector<Node> successor, vector<Node> closed){
-	cout << "Board as is: " << endl;
-	p.printBoard();
+int locateBestSuccessorNode(Node* p, vector<Node> successor, vector<Node> closed){
+	cout << "IN LOCATEBEST Current puzzle board from locate...: " << endl;
+	p->printBoard();
+	cout << "Address of current board from locate...: " << p << endl;
 	cout << endl;
 	int index = 0;
 	for(int i = 0; i < successor.size(); i++){
 		cout << "Node " << i << endl; // debugging
 		cout << "Score: " << successor[i].numTilesOutOfPlace << endl; // debugging
-		if(!matchClosedNodes(successor[i], closed)){
+		if(!matchClosedNodes(successor[i], closed)){ // if the node has not already been expanded
 			cout << "MatchClosedNodes didn't fail" << endl;
-			if(*(successor[i].predecessor) == p){
-				cout << "Predecessors match" << endl;
+			cout << "Address of predecessor from locate...: " << successor[i].predecessorNode << endl;
+			successor[i].predecessorNode->printBoard();
+			cout << "Address of current board from locate...: " << &p << endl;
+			p->printBoard();
+			cout << endl;
+			if(successor[i].predecessorNode->matchBoard(p->board)){ // if the node is at the correct depth
+				cout << "Predecessor matches" << endl;
 				//cout << "Node " << i << endl; // debugging
 				//cout << "Score: " << successor[i].numTilesOutOfPlace << endl; // debugging
 				if(successor[i].combinedScore < successor[index].combinedScore){
 					index = i;
 					cout << "Index: " << i << endl; //debugging
-				}
+				} // end if
 				//successor[i].printBoard(); // debugging
 				//cout << endl; // debugging
-			}
-		}
+			} // end if
+		} // end if 
 		successor[i].printBoard(); // debugging
 		cout << endl; // debugging
-	}
+	} // end for
 	if(index == 0){
 		if(matchClosedNodes(successor[index], closed)){
 			cout << "FAILURE: successor is closed" << endl;
 			index = -1;
-		}
-		else if(!(*(successor[index].predecessor) == p)){
+		} // end if
+		else if(!successor[index].predecessorNode->matchBoard(p->board)){
 			cout << "FAILURE: successor not from predecessor" << endl;
 			index = -1;
-		}
-	}
-	
+		} // end if
+	} // end if	
 	return index;
 }
 
 // Make next move based on number of tiles out of place relative to goal
-bool nextMove(vector<int> &moves, Node &p, vector<Node> &successor, vector<Node> &closed){
+Node nextMove(vector<int> &moves, Node* p, vector<Node> &successor, vector<Node> &closed){
+	cout << "IN NEXTMOVE Current puzzle board from nextMove: " << endl;
+	p->printBoard();
+	cout << "Address of current board from nextMove: " << p << endl;
 	int indexBestChoice = locateBestSuccessorNode(p, successor, closed);
 	if(indexBestChoice >= 0){ //successor found
-		int position = p.locateEmptySpace();		
-		p = successor[indexBestChoice];
-		moves.push_back(p.board[position].value);
-		closed.push_back(p);
+		int position = p->locateEmptySpace();		
+		cout << "Address of current board from nextMove: " << p << endl;
+		Node* tempAddress = p;
+		Node tempNode = successor[indexBestChoice];
+		tempNode.predecessorNode = tempAddress;
+		cout << "Address of updated board predecessor from nextMove: " << tempNode.predecessorNode << endl;
+		moves.push_back(tempNode.board[position].value);
+		closed.push_back(tempNode);
 		successor.erase(successor.begin() + indexBestChoice);
-		return true;
+		return tempNode;
 	}
 	else { // no successors found
-		cout << "OriginalStateOfBoard: " << p.isOriginalStateOfBoard << endl;
-		if(p.isOriginalStateOfBoard){
+		cout << "OriginalStateOfBoard: " << p->isOriginalStateOfBoard << endl;
+		if(p->isOriginalStateOfBoard){
 			cout << "No successors found for original state of board" << endl;
 			moves.pop_back();
-			nextMove(moves, p, successor, closed);
-			return false;
+			//nextMove(moves, p, successor, closed);
+			return *p;
 		}
 		else {
 			cout << "No successors found" << endl;
-			p = *(p.predecessor);
+			Node tempNode = *p;
+			tempNode.revertToPredecessor();
 			moves.pop_back();
-			nextMove(moves, p, successor, closed);
-			return false;
+			//nextMove(moves, p, successor, closed);
+			return tempNode;
 		}
 	}
 }	
@@ -145,27 +166,30 @@ int main(int argc, char *argv[]){
 	vector<Node> closedNodes;
 	vector<int> moves;
 	int count = 0;
-	bool success = true;
 
 	// Initialize board
 	readFromInputFile(filename, inputValues);
-	Node puzzle(inputValues);
-	closedNodes.push_back(puzzle);
+	Node initialNode(inputValues);
+	Node* puzzle = &initialNode;
+	closedNodes.push_back(*puzzle);
 	
 	// Find a solution with heuristic 2: 
 	// number of tiles out of place relative to goal
-	while(puzzle.tilesOutOfPlaceRelativeToGoal() > 0){
+	while(puzzle->tilesOutOfPlaceRelativeToGoal() > 3){
+		cout << "AFTER WHILE Current puzzle board from main: " << endl;
+		puzzle->printBoard();
+		cout << endl;
 		expandNode(puzzle, successorNodes);
-		success = nextMove(moves, puzzle, successorNodes, closedNodes);
-		if(success){
-			cout << "Decision: " << endl;
-			puzzle.printBoard();
-			cout << endl;
-			count++;
-		}
-		else {
-			return 0;
-		}
+		cout << "AFTER EXPANDNODE Current puzzle board from main: " << endl;
+		puzzle->printBoard();
+		Node current = nextMove(moves, puzzle, successorNodes, closedNodes);
+		cout << "DECISION: " << endl;
+		current.printBoard();
+		cout << endl;
+		count++;
+		puzzle = &current;
+		cout << "Address of puzzle from main: " << puzzle << endl;
+		
 		if(count > 10){
 			return 0;
 		}
