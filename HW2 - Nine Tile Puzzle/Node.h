@@ -43,9 +43,9 @@ class Node {
 		int locateEmptySpace();
 		bool matchBoard(vector<tile>);
 		bool operator == (Node);
-		void revertToPredecessor();
 		bool searchLinksRound1(int, int);
 		bool searchLinksRound2(int, int);
+		bool searchLinksRound3(int, int);
 
 };
 
@@ -143,10 +143,19 @@ bool Node::searchLinksRound2(int position, int num){
 	return false;
 }
 
-// position on board
-// get links
-// iterate through links
-// check links of links for value
+// Check links for a position
+bool Node::searchLinksRound3(int position, int num){
+	for(int i = 0; i < board[position].numLinks; i++){
+		for(int j = 0; j < board[board[position].links[i]].numLinks; j++){
+			for(int k= 0; k < board[board[board[position].links[i]].links[j]].numLinks; k++){
+				if(board[board[board[board[position].links[i]].links[j]].links[k]].value == num){
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
 
 // Calculate Manhattan distance to goal from particular tile
 int Node::manhattanDistance(){
@@ -160,8 +169,11 @@ int Node::manhattanDistance(){
 				else if(searchLinksRound2(i, (i + 1))){
 					sumDistance += 2;
 				}
-				else {
+				else if(searchLinksRound3(i, (i + 1))){
 					sumDistance += 3;
+				}
+				else {
+					sumDistance += 4;
 				}
 			}
 			else if(board[i].value != 0){			
@@ -171,8 +183,11 @@ int Node::manhattanDistance(){
 				else if(searchLinksRound2(i, (i + 1))){
 					sumDistance += 2;
 				}
-				else {
+				else if(searchLinksRound3(i, (i + 1))){
 					sumDistance += 3;
+				}
+				else {
+					sumDistance += 4;
 				}
 			}
 		}

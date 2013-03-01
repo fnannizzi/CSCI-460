@@ -140,22 +140,12 @@ int main(int argc, char *argv[]){
 	Node searchNode = initialNode;
 	openNodes.push_back(searchNode);
 	
-	int count = 0;
-	
 	// Find a solution using manhattan distance
 	while(!openNodes.empty()){
 		expandNode(searchNode, openNodes, successorNodes, closedNodes);
 		addSuccessorsToOpenList(successorNodes, openNodes);
 		closedNodes.push_back(searchNode);
 		searchNode = nextNodeManhattanDistance(openNodes);
-		//cout << "Decision: " << count << endl;
-		//cout << "MD: " << searchNode.manhattanDistance() << endl;
-		//searchNode.printBoard();
-		//cout << endl;
-		count++;
-		if(count > 10){
-			//break;
-		}
 		if(searchNode.manhattanDistance() == 0){
 			break;
 		}
@@ -171,21 +161,12 @@ int main(int argc, char *argv[]){
 	searchNode = initialNode;
 	openNodes.push_back(searchNode);
 	
-	count = 0;
-	
 	// Find a solution using number of tiles out of place relative to goal
 	while(!openNodes.empty()){
 		expandNode(searchNode, openNodes, successorNodes, closedNodes);
 		addSuccessorsToOpenList(successorNodes, openNodes);
 		closedNodes.push_back(searchNode);
 		searchNode = nextNodeMisplacedTiles(openNodes);
-		//cout << "Decision: " << count << endl;
-		//searchNode.printBoard();
-		//cout << endl;
-		count++;
-		if(count > 40){
-			//break;
-		}
 		if(searchNode.tilesOutOfPlaceRelativeToGoal() == 0){
 			break;
 		}
