@@ -17,7 +17,6 @@ void readFromInputFile(string f, vector<int> &iV){
 	ifstream file(f.c_str());
 	if(file.is_open()){
 		while(file >> nextInt){
-			//cout << "Read in " << nextInt << endl;
 			iV.push_back(nextInt);
 		}
 		file.close();
@@ -137,14 +136,22 @@ int main(int argc, char *argv[]){
 	openNodes.push_back(searchNode);
 	
 	// Find a solution using manhattan distance
-	while(!openNodes.empty()){
+	// While there are unexpanded nodes:
+	while(!openNodes.empty()){ 
+	
+		// Expand (find the successors of) the current node
 		expandNode(searchNode, openNodes, successorNodes, closedNodes);
+		
+		// Add the successors to the open list 
 		addSuccessorsToOpenList(successorNodes, openNodes);
+		
+		// Move the current node (the one just expanded) to the closed list
 		closedNodes.push_back(searchNode);
+		
+		// Pick a new node with a low Manhattan distance to expand next
 		searchNode = nextNodeManhattanDistance(openNodes);
-		//cout << "Decision: " << endl;
-		//searchNode.printBoard();
-		//cout << endl;
+		
+		// If the new node is the goal state, quit
 		if(searchNode.manhattanDistance() == 0){
 			break;
 		}
@@ -161,14 +168,22 @@ int main(int argc, char *argv[]){
 	openNodes.push_back(searchNode);
 	
 	// Find a solution using number of tiles out of place relative to goal
+	// While there are unexpanded nodes:
 	while(!openNodes.empty()){
+	
+		// Expand (find the successors of) the current node	
 		expandNode(searchNode, openNodes, successorNodes, closedNodes);
+		
+		// Add the successors to the open list 
 		addSuccessorsToOpenList(successorNodes, openNodes);
+		
+		// Move the current node (the one just expanded) to the closed list		
 		closedNodes.push_back(searchNode);
+		
+		// Pick a new node with a low number of misplaced tiles to expand next
 		searchNode = nextNodeMisplacedTiles(openNodes);
-		//cout << "Decision: " << endl;
-		//searchNode.printBoard();
-		//cout << endl;
+		
+		// If the new node is the goal state, quit
 		if(searchNode.tilesOutOfPlaceRelativeToGoal() == 0){
 			break;
 		}
