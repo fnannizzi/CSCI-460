@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#include <cmath>
 
 using namespace std;
 
@@ -26,78 +27,64 @@ struct tile {
 class Node {
 	public:
 		// Data
-		Node* predecessorNode;
 		vector<tile> board;
-		int numTilesOutOfPlace;
-		int numMovesToNode;
-		int combinedScore;
-		bool isOriginalStateOfBoard;
+		vector<int> moves;
 	
 		// Functions
 		Node(vector<int>);
-		Node(Node*, vector<tile>, int);
+		Node(vector<tile>, vector<int>);
 		~Node();
 		void addEdgesToTiles();
 		void loadInputIntoTiles(vector<int>);
 		void printBoard();
 		int tilesOutOfPlaceRelativeToGoal();
-		//int manhattanDistance(int);
+		int manhattanDistance();
 		void moveTilePosition(int, int);
 		int locateEmptySpace();
 		bool matchBoard(vector<tile>);
 		bool operator == (Node);
 		void revertToPredecessor();
+		bool searchLinksRound1(int, int);
+		bool searchLinksRound2(int, int);
 
 };
 
 // Constructor for start node
 Node::Node(vector<int> inputValues){
-	predecessorNode = NULL;
 	loadInputIntoTiles(inputValues);
 	addEdgesToTiles();
-	
-	isOriginalStateOfBoard = true;
-	numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
-	numMovesToNode = 0;
-	combinedScore = numTilesOutOfPlace + numMovesToNode;
+	moves.clear();
 }
 
 // Constructor for all other nodes
-Node::Node(Node* p, vector<tile> b, int numMoves){
-	predecessorNode = p;
+Node::Node(vector<tile> b, vector<int> m){
 	board = b;
-	
-	isOriginalStateOfBoard = false;
-	numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
-	numMovesToNode = numMoves;
-	combinedScore = numTilesOutOfPlace + numMovesToNode;
+	moves = m;
 }
 
 // Deconstructor
 Node::~Node(){}
 
-void Node::revertToPredecessor(){
-	if(predecessorNode != NULL){
-		board = predecessorNode->board;
-	
-		isOriginalStateOfBoard = predecessorNode->isOriginalStateOfBoard;
-		numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
-		numMovesToNode = predecessorNode->numMovesToNode;
-		combinedScore = numTilesOutOfPlace + numMovesToNode;
-	
-		predecessorNode = predecessorNode->predecessorNode;
-	}
-}
-
 bool Node::operator== (Node param){
 	if(!matchBoard(param.board)){
 		return false;
+	}
+	if(moves.size() != param.moves.size()){
+		return false;
+	}
+	for(int i = 0; i < moves.size(); i++){
+		if(moves[i] != param.moves[i]){
+			return false;
+		}
 	}
 	return true;
 }
 
 // Compares board against another board to check for a match
 bool Node::matchBoard(vector<tile> b){
+	if(board.size() != b.size()){ // should never occur
+		return false;
+	}
 	for(int i = 0; i < 10; i++){
 		if(board[i].value != b[i].value){
 			return false;
@@ -124,23 +111,76 @@ void Node::moveTilePosition(int startPosition, int endPosition){
 				int temp = board[startPosition].value;
 				board[startPosition].value = 0;
 				board[endPosition].value = temp;
+				moves.push_back(temp);
 				break;
 			}
 		}	
-		numTilesOutOfPlace = tilesOutOfPlaceRelativeToGoal();
-		numMovesToNode++;
-		combinedScore = numTilesOutOfPlace + numMovesToNode;
 	}
 	else {
 		cout << "ERROR: Cannot move tile." << endl;
 	}
 }
 
-/*// Calculate Manhattan distance to goal from particular tile
-int Node::manhattanDistance(int tileIndex){
-	int distance = 0;
-	if(board[tileIndex].value == 
-}*/
+// Check links for a position
+bool Node::searchLinksRound1(int position, int num){
+	for(int i = 0; i < board[position].numLinks; i++){
+		if(board[board[position].links[i]].value == num){
+			return true;
+		}
+	}
+	return false;
+}
+
+// Check links for a position
+bool Node::searchLinksRound2(int position, int num){
+	for(int i = 0; i < board[position].numLinks; i++){
+		for(int j = 0; j < board[board[position].links[i]].numLinks; j++){
+			if(board[board[board[position].links[i]].links[j]].value == num){
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+// position on board
+// get links
+// iterate through links
+// check links of links for value
+
+// Calculate Manhattan distance to goal from particular tile
+int Node::manhattanDistance(){
+	int sumDistance = 0;
+	for(int i = 0; i < 10; i++){
+		if(board[i].value != (i + 1)){
+			if(i != 9){
+				if(searchLinksRound1(i, (i + 1))){
+					sumDistance += 1;
+				}
+				else if(searchLinksRound2(i, (i + 1))){
+					sumDistance += 2;
+				}
+				else {
+					sumDistance += 3;
+				}
+			}
+			else if(board[i].value != 0){			
+				if(searchLinksRound1(i, (i + 1))){
+					sumDistance += 1;
+				}
+				else if(searchLinksRound2(i, (i + 1))){
+					sumDistance += 2;
+				}
+				else {
+					sumDistance += 3;
+				}
+			}
+		}
+		//cout << sumDistance << " ";
+	}
+	//cout << endl;
+	return sumDistance;
+}
 
 // Calculate number of tiles out of place relative to goal state
 int Node::tilesOutOfPlaceRelativeToGoal(){
