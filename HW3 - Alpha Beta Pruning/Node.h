@@ -15,39 +15,67 @@ class Node {
 	public:
 	//Data
 		string name, level;
-		int number, alpha, beta, value;
+		int depth, number, alpha, beta, value;
+		bool expanded;
 		MinOrMax minOrMax;
 		Node* predecessor;
 		vector<Node*> successors;
 	
 	// Methods	
-		Node(string, int);
 		Node(string, int, int);
+		Node(string, int, int, int);
 		~Node();
 		void setMinOrMax(string);
 		string getMinOrMax();
+		bool isMax();
+		string getAlphaBeta();
 		string makeName(string, int);
+		bool successorsExpanded();
+		int getIndexNextUnexpandedSuccessor();
 };
 
-Node::Node(string l, int n){
+Node::Node(string l, int n, int d){
 	level = l;
+	depth = d;
 	number = n;
 	name = makeName(level, number);
 	alpha = -99;
 	beta = 99;
-	value = 0;
+	value = -100;
+	expanded = false;
 }
 
-Node::Node(string l, int n, int v){
+Node::Node(string l, int n, int d, int v){
 	level = l;
+	depth = d;
 	number = n;
 	name = makeName(level, number);
-	alpha = -99;
-	beta = 99;
+	alpha = v;
+	beta = v;
 	value = v;
+	expanded = false;
 }
 
 Node::~Node(){}
+
+bool Node::successorsExpanded(){
+	bool expanded = true;
+	for(int i = 0; i < successors.size(); i++){
+		if(!successors[i]->expanded){
+			expanded = false;
+		}
+	}
+	return expanded;
+}
+
+int Node::getIndexNextUnexpandedSuccessor(){
+	for(int i = 0; i < successors.size(); i++){
+		if(!successors[i]->expanded){
+			return i;
+		}
+	}
+	return -1;
+}
 
 void Node::setMinOrMax(string m){
 	if(m == "min"){
@@ -60,11 +88,44 @@ void Node::setMinOrMax(string m){
 
 string Node::getMinOrMax(){
 	if(minOrMax == MIN){
-		return "min";
+		return "MIN";
 	}
 	else if(minOrMax == MAX){
-		return "max";
+		return "MAX";
 	}
+}
+
+bool Node::isMax(){
+	if(minOrMax == MAX){
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+string Node::getAlphaBeta(){
+	stringstream ss;
+	string line = "alpha = ";
+	if(alpha == -99){
+		line += "negative infinity";
+	}
+	else {
+		ss << alpha; 
+		line += ss.str();
+	}
+	
+	line += " beta = ";
+	ss.str("");
+	if(beta == 99){
+		line += "positive infinity";
+	}
+	else {
+		ss << beta; 
+		line += ss.str();
+	}
+	
+	return line;
 }
 
 string Node::makeName(string l, int n){
