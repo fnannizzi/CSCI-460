@@ -1,7 +1,4 @@
-#include <iostream>
-#include <string>
 #include "GameTree.h"
-#include "Node.h"
 
 using namespace std;
 
