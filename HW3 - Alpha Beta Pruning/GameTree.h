@@ -5,6 +5,7 @@
 #include <string>
 #include <math.h>
 #include <iomanip>
+#include <stdio.h>
 #include "Node.h"
 
 using namespace std;
@@ -23,7 +24,10 @@ class GameTree {
 	void printTree();
 	void printSuccessors(Node*, int);
 	int alphaBetaMiniMax(Node*, int, int);
+	void alphaBetaUpward(Node*);
+	void alphaBetaDownward(Node*);
 	void expandTree();
+	string getBestMove();
 			
 };
 
@@ -38,7 +42,7 @@ void GameTree::initializeTree(){
 	root = new Node("a", 0, 1);
 	root->setMinOrMax("max");
 	root->predecessor = NULL;
-	cout << "Initialized level a" << endl;
+	//cout << "Initialized level a" << endl;
 	
 	//Initialize level b
 	for(int i = 0; i < 2; i++){
@@ -47,7 +51,7 @@ void GameTree::initializeTree(){
 		b->predecessor = root;
 		root->successors.push_back(b);
 	}
-	cout << "Initialized level b" << endl;
+	//cout << "Initialized level b" << endl;
 	
 	// Initialize level c
 	for(int i = 0; i < root->successors.size(); i++){
@@ -60,7 +64,7 @@ void GameTree::initializeTree(){
 		c2->predecessor = root->successors[i];
 		root->successors[i]->successors.push_back(c2);
 	}
-	cout << "Initialized level c" << endl;
+	//cout << "Initialized level c" << endl;
 	
 	// Initialize level d0
 	for(int i = 0; i < 3; i++){
@@ -69,7 +73,7 @@ void GameTree::initializeTree(){
 		d0->predecessor = root->successors[0]->successors[0];
 		root->successors[0]->successors[0]->successors.push_back(d0);
 	}
-	cout << "Initialized level d0" << endl;
+	//cout << "Initialized level d0" << endl;
 	
 	// Initialize level d1
 	Node* d1 = new Node("d", 3, 4);
@@ -80,7 +84,7 @@ void GameTree::initializeTree(){
 	d1->setMinOrMax("min");
  	d1->predecessor = root->successors[0]->successors[1];
 	root->successors[0]->successors[1]->successors.push_back(d1);
-	cout << "Initialized level d1" << endl;
+	//cout << "Initialized level d1" << endl;
 	
 	// Initialize level d2
 	for(int i = 5; i <= 8; i++){
@@ -89,7 +93,7 @@ void GameTree::initializeTree(){
 		d2->predecessor = root->successors[1]->successors[(i/7)];
 		root->successors[1]->successors[(i/7)]->successors.push_back(d2);
 	}	
-	cout << "Initialized level d2" << endl;
+	//cout << "Initialized level d2" << endl;
 	
 	// Initialize level e
 	Node* e = new Node("e", 0, 5, -1);
@@ -203,49 +207,144 @@ void GameTree::printSuccessors(Node* node, int spaces){
 }
 
 int GameTree::alphaBetaMiniMax(Node* node, int alpha, int beta){
-	cout << "Expanding " << node->getMinOrMax() << " Node " << node->name << ": " << node->getAlphaBeta() << endl;
-	cout << "Num successors: " << node->successors.size() << endl;
-	node->expanded = true;
-	
-	if(root->value != -100){
-		return root->value;
-	}
-	if(node->successorsExpanded()){ // if all successors of current node have been expanded
-		cout << "All successors of node have been expanded." << endl;
-		while(node->predecessor != NULL){ // while not at root
-			cout << "Backtracking." << endl;
-			cout << "Num successors of predecessor: " << node->predecessor->successors.size() << endl;
-			if(node->predecessor->successorsExpanded()){ // if the predecessor's successors are also all expanded
-				cout << "Predecessor's successors are all expanded." << endl;
-				node = node->predecessor; // backtrack
-			}
-			else{ // not all of the successors are expanded
-				cout << "Predecessor's successors not expanded." << endl;
-				node = node->predecessor; // backtrack
-				break;
-			}
-		}
-		int nextSuccessor = node->getIndexNextUnexpandedSuccessor();
-		if(nextSuccessor != -1){ // not sure if at root, or unexpanded successors
-			cout << "Next successor found." << endl;
-			return alphaBetaMiniMax(node->successors[nextSuccessor], alpha, beta);
-		}
-		else {
-			cout << "No successors found, returning root value." << endl;
-			return root->value;
-		}
+	if(node->certainValue){
+		cout << "Expanding leaf Node " << node->name << " with value: " << node->value << endl;
 	}
 	else {
-		cout << "Not all successors of predecessor have been expanded." << endl;
-		int nextSuccessor = node->getIndexNextUnexpandedSuccessor();
-		return alphaBetaMiniMax(node->successors[nextSuccessor], alpha, beta);
+		cout << "Expanding " << node->getMinOrMax() << " Node " << node->name << ": " << node->getAlphaBeta() << endl;
 	}
+	//cout << "Num successors: " << node->successors.size() << endl;
+	node->expanded = true;
 
+	if(!node->successorsExpanded()) {
+		//cout << "Not all successors have been expanded." << endl;
+		if(node->predecessor != NULL){
+			/*cout << "Predecessor " << node->predecessor->getMinOrMax() 
+			<< " Node " << node->predecessor->name << ": " 
+			<< node->predecessor->getAlphaBeta() << endl;
+			*/
+			int nextSuccessor = node->getIndexNextUnexpandedSuccessor();
+			alphaBetaDownward(node->successors[nextSuccessor]);
+			return alphaBetaMiniMax(node->successors[nextSuccessor], alpha, beta);
+		}
+		else { // at root
+			int nextSuccessor = node->getIndexNextUnexpandedSuccessor();
+			alphaBetaDownward(node->successors[nextSuccessor]);
+			return alphaBetaMiniMax(node->successors[nextSuccessor], alpha, beta);
+		}
+	}
+	
+	restart: 
+	//cout << "All successors of node have been expanded." << endl;
+	while(node->predecessor != NULL){ // while not at root
+		//cout << "Backtracking." << endl;	
+		//cout << "Num successors of predecessor: " << node->predecessor->successors.size() << endl;
+		//cout << endl;
+		alphaBetaUpward(node);
+		if(node->predecessor->successorsExpanded()){ // if the predecessor's successors are also all expanded
+			//cout << "Predecessor's successors are all expanded." << endl;
+			node = node->predecessor; // backtrack
+			node->setValue();
+			//cout << "Node " << node->name << " value: " << node->value << endl;
+		}
+		else{ // not all of the successors are expanded
+			//cout << "Predecessor's successors not expanded." << endl;
+			node = node->predecessor; // backtrack
+			break;
+		}
+	}
+	int nextSuccessor = node->getIndexNextUnexpandedSuccessor();
+	if(nextSuccessor != -1){ // not sure if at root, or unexpanded successors
+		//cout << "Next successor found." << endl;
+
+
+		if(!(node->alpha >= node->beta)){
+			int nextSuccessor = node->getIndexNextUnexpandedSuccessor();
+			alphaBetaDownward(node->successors[nextSuccessor]);
+			node = node->successors[nextSuccessor];
+			//cout << "Next node " << node->getMinOrMax() << " Node " << node->name << ": " << node->getAlphaBeta() << endl;
+			return alphaBetaMiniMax(node, alpha, beta);
+		}
+		else {
+			for(int i = 0; i < node->successors.size(); i++){
+				if(!node->successors[i]->expanded){
+					if(node->successors[i]->isMax()){
+						cout << "Skipping expansion of Node " << node->successors[i]->name 
+						<< " because it cannot make alpha higher."<< endl;
+					}
+					else {
+						cout << "Skipping expansion of Node " << node->successors[i]->name 
+						<< " because it cannot make beta lower."<< endl;
+					}
+				}
+			}
+			goto restart;
+		}
+	}
+	else { // no successors found
+		root->setValue();
+		return root->value;
+	}
+}
+
+void GameTree::alphaBetaDownward(Node* node){
+	if(node->predecessor != NULL){
+		if(!node->certainValue){
+			node->alpha = node->predecessor->alpha;
+			node->beta = node->predecessor->beta;
+		}
+	}
+	/*cout << "Predecessor " << node->predecessor->getMinOrMax() 
+	<< " Node " << node->predecessor->name << ": " 
+	<< node->predecessor->getAlphaBeta() << endl;	*/
+}
+
+void GameTree::alphaBetaUpward(Node* node){
+	if(node->predecessor != NULL){
+		if(node->predecessor->isMax()){ // parent node is a MAX
+			if(node->certainValue){
+				if(node->predecessor->alpha < node->value){
+					node->predecessor->alpha = node->value;
+				}
+			}
+			else if(node->predecessor->alpha < node->beta){
+				node->predecessor->alpha = node->beta;
+			}	
+		}
+		else { // parent node is a MIN
+			if(node->certainValue){
+				if(node->predecessor->beta > node->value){
+					node->predecessor->beta = node->value;
+				}
+			}
+			else if(node->predecessor->beta > node->alpha){
+				node->predecessor->beta = node->alpha;
+			}
+		}
+	}
+	/*cout << "Predecessor " << node->predecessor->getMinOrMax() 
+	<< " Node " << node->predecessor->name << ": " 
+	<< node->predecessor->getAlphaBeta() << endl;*/
 }
 
 void GameTree::expandTree(){
 	int a = alphaBetaMiniMax(root, -99, 99);
-	cout << "Value of a: " << a << endl;
+	cout << "Expansions completed." << endl;
+	
+	cout << "Value of Max Node A = " << root->value << endl;
+	
+	cout << "Move that Max Node A would make is = " << getBestMove() << endl;
+	
+}
+
+string GameTree::getBestMove(){
+	int index = 0;
+	for(int i = 0; i < root->successors.size(); i++){
+		if(root->successors[i]->value > root->successors[index]->value){
+			index = i;
+		}
+	}
+	return root->successors[index]->name;
 }
 
 #endif

@@ -9,9 +9,7 @@ int main(int argc, char* argv[]){
 	
 	GameTree gameTree;
 	gameTree.initializeTree();
-	gameTree.printTree();
 	gameTree.expandTree();
-	
 	
 	return 0;
 }

@@ -16,7 +16,7 @@ class Node {
 	//Data
 		string name, level;
 		int depth, number, alpha, beta, value;
-		bool expanded;
+		bool expanded, certainValue;
 		MinOrMax minOrMax;
 		Node* predecessor;
 		vector<Node*> successors;
@@ -29,6 +29,7 @@ class Node {
 		string getMinOrMax();
 		bool isMax();
 		string getAlphaBeta();
+		void setValue();
 		string makeName(string, int);
 		bool successorsExpanded();
 		int getIndexNextUnexpandedSuccessor();
@@ -43,6 +44,7 @@ Node::Node(string l, int n, int d){
 	beta = 99;
 	value = -100;
 	expanded = false;
+	certainValue = false;
 }
 
 Node::Node(string l, int n, int d, int v){
@@ -50,10 +52,11 @@ Node::Node(string l, int n, int d, int v){
 	depth = d;
 	number = n;
 	name = makeName(level, number);
-	alpha = v;
-	beta = v;
+	alpha = -99;
+	beta = 99;
 	value = v;
 	expanded = false;
+	certainValue = true;
 }
 
 Node::~Node(){}
@@ -75,6 +78,24 @@ int Node::getIndexNextUnexpandedSuccessor(){
 		}
 	}
 	return -1;
+}
+
+void Node::setValue(){
+	if(value == -100){
+		value = successors[0]->value;
+		for(int i = 0; i < successors.size(); i++){
+			if(minOrMax == MIN){
+				if(successors[i]->value < value ){
+					value = successors[i]->value;
+				}
+			}
+			else {
+				if(successors[i]->value > value ){
+					value = successors[i]->value;
+				}
+			}
+		}
+	}
 }
 
 void Node::setMinOrMax(string m){
