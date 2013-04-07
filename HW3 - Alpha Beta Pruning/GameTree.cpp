@@ -1,9 +1,12 @@
 #include "GameTree.h"
 
+// Constructor
 GameTree::GameTree(){}
 
+// Destructor
 GameTree::~GameTree(){}
 
+// Runs minimax with alpha beta pruning and prints final results
 void GameTree::expandTree(){
 	int a = alphaBetaMiniMax(root, -99, 99);
 	cout << "Expansions completed." << endl;
@@ -14,6 +17,7 @@ void GameTree::expandTree(){
 	
 }
 
+// Minimax with alpha beta pruning algorithm
 int GameTree::alphaBetaMiniMax(Node* node, int alpha, int beta){
 	if(node->certainValue){
 		cout << "Expanding leaf Node " << node->name << " with value: " << node->value << endl;
@@ -35,8 +39,10 @@ int GameTree::alphaBetaMiniMax(Node* node, int alpha, int beta){
 			return alphaBetaMiniMax(node->successors[nextSuccessor], alpha, beta);
 		}
 	}
-	
-	restart: 
+	backtrack(node, alpha, beta);
+}
+
+int GameTree::backtrack(Node * node, int alpha, int beta){
 	while(node->predecessor != NULL){ // while not at root
 		alphaBetaUpward(node);
 		if(node->predecessor->successorsExpanded()){ // if the predecessor's successors are also all expanded
@@ -69,7 +75,7 @@ int GameTree::alphaBetaMiniMax(Node* node, int alpha, int beta){
 					}
 				}
 			}
-			goto restart;
+			backtrack(node, alpha, beta);
 		}
 	}
 	else { // no successors found

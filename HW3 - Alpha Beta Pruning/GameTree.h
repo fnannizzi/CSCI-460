@@ -24,6 +24,7 @@ class GameTree {
 	void printTree();
 	void printSuccessors(Node*, int);
 	int alphaBetaMiniMax(Node*, int, int);
+	int backtrack(Node*, int, int);
 	void alphaBetaUpward(Node*);
 	void alphaBetaDownward(Node*);
 	void expandTree();
